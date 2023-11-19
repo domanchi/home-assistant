@@ -1,0 +1,66 @@
+blueprint:
+  domain: automation
+  name: Manual Pause Bug Fix
+  description: |-
+    ## Manual Pause Bug Fix
+
+    With the MusicAssistant add-on to enable playlist management, device state is not mapped to
+    playlist state by default. Consequently, when the media player is manually turned off (i.e.
+    by a physical remote), the MusicAssistant treats it as a skipped track, and starts streaming
+    the next one.
+
+    Instead, what should happen is that the MusicAssistant playlist should stop. Powering off a
+    device, no matter the cause, should indicate an intent to have no more music, rather than a
+    track skip.
+
+    This blueprint fixes this bug.
+
+    Version: 0.0.1
+
+  # TODO: would prefer if single entry, like the existing trigger UI.
+  input:
+    device: 
+      name: (Required) Media Player
+      description: Output device used to play content from MusicAssistant.
+      selector:
+        device:
+          entity:
+            - domain: media_player
+    entity:
+      name: (Required) Media Player
+      description: Same thing as device, because HomeAssistant is limited.
+      selector:
+        entity:
+          filter:
+            - domain: media_player
+
+trigger:
+  - platform: device
+    domain: media_player
+    device_id: !input device
+    entity_id: !input entity
+    type: idle
+  - platform: device
+    domain: media_player
+    device_id: !input device
+    entity_id: !input entity
+    type: turned_off
+
+condition: []
+
+action:
+  - service: media_player.clear_playlist
+    target:
+      device_id: !input device
+
+  # Due to the event processing between Automations and MusicAssistant, the device is often turned
+  # on again by the MusicAssistant. We want to wait for a little bit before turning it back off
+  # again because we don't want to issue the "turn off" command before the device actually turns on.
+  - delay:
+      seconds: 2
+
+  - service: media_player.turn_off
+    target:
+      device_id: !input device
+
+mode: single
