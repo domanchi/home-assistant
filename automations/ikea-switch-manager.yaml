@@ -1,0 +1,67 @@
+# The IKEA STYRBAR Switch is a useful tactile tool that essentially allows
+# configurable, arbitrary API commands on a Zigbee network. It has four buttons,
+# and 12 event listeners (each button has press, hold, release).
+
+id: "ikea-switch-manager"
+mode: single
+alias: IKEA Switch Manager
+description: Action to take when the IKEA Switch's buttons are pressed.
+
+# For more information, see https://www.zigbee2mqtt.io/devices/E2001_E2002.html
+trigger:
+  - platform: mqtt
+    topic: zigbee2mqtt/Button
+
+condition: []
+
+action:
+  # Control a night light, with auto-sleep functionality.
+  - if:
+      - condition: template
+        value_template: "{{ trigger.payload_json.action == 'on' }}"
+    then:
+      - service: light.turn_on
+        data:
+          brightness_pct: 10
+        target:
+          device_id: c22dbfaab2c97feb31a3333c0a50c8c1
+
+      # Wait for some time, before turning the night light off.
+      - delay:
+          hours: 2
+
+      - service: light.turn_off
+        data: {}
+        target:
+          device_id: c22dbfaab2c97feb31a3333c0a50c8c1
+
+  # NOTE: Until we get music integrated with this, let's just use this
+  # for development
+  - if:
+      - condition: template
+        value_template: "{{ trigger.payload_json.action == 'off' }}"
+    then:
+      - service: light.turn_off
+        data: {}
+        target:
+          device_id: c22dbfaab2c97feb31a3333c0a50c8c1
+
+
+  # NOTE: Unfortunately, we need to catch this on button press (rather than
+  # being independent to actual usage) because I can't get status requests to
+  # work over MQTT.
+  - if:
+      - condition: template
+        value_template: "{{ trigger.payload_json.battery <= 10 }}"
+    then:
+      - service: notify.pockets_inc
+        data:
+          target: "#chores"
+          message: Change the IKEA Switch's battery.
+          data:
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: The *IKEA Switch* needs its battery changed.
+                    It is currently on *{{ trigger.payload_json.battery}}%*.

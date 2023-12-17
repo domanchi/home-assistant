@@ -1,0 +1,102 @@
+# Problem: The Dyson fan doesn't have auto-shutoff capabilities. The "auto" preset
+# continues to blow hot air at the lowest speed to maintain the same temperature,
+# once the desired temperature has been reached.
+#
+# Desired State: It is OK for temperature to fluctuate between a specified range.
+# When the room gets too cold (as measured by the fan), the heat should turn on
+# to warm it up until an acceptable level is reached. Then, it should turn off
+# and let the room gradually cool down naturally.
+
+id: "dyson-fan-manager"
+mode: single
+alias: Dyson Fan Manager
+description: >-
+  Implements a slightly more energy efficient climate controller with the Dyson fan. 
+
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.air_purifier_fan_temperature
+
+condition: []
+
+action:
+  # Heat the room if the temperature falls below a specific threshold.
+  - if:
+      - condition: and
+        conditions:
+          # NOTE: This condition helps prevent multiple successive commands
+          # being sent to the same device.
+          - condition: state
+            entity_id: fan.air_purifier_fan
+            state: "off"
+
+          # NOTE: Currently, we only care about heating the room in the evening.
+          #- condition: time
+            #after: "19:30:00"
+            #before: "08:30:00"
+
+          - condition: numeric_state
+            entity_id: sensor.air_purifier_fan_temperature
+            below: 68
+    then:
+      - service: fan.turn_on
+        data:
+          preset_mode: "Auto"
+        target:
+          device_id: f0648e102917955d0a22ac4fbecbe5a3
+
+      - service: climate.set_temperature
+        data:
+          temperature: 70
+          hvac_mode: heat
+        target:
+          device_id: f0648e102917955d0a22ac4fbecbe5a3
+
+  # The inverse of the above scenario: turn off the heat once the desired
+  # temperature has been reached.
+  - if:
+      - condition: and
+        conditions:
+          - condition: state
+            entity_id: fan.air_purifier_fan
+            state: "on"
+
+          # NOTE: This condition is important because we want to avoid the
+          # scenario where the fan auto-turns off despite attempting to cool
+          # down the room.
+          - condition: state
+            entity_id: climate.air_purifier_fan
+            state: "heat"
+
+          - condition: numeric_state
+            entity_id: sensor.air_purifier_fan_temperature
+            above: 70
+    then:
+      - service: fan.turn_off
+        data: {}
+        target:
+          device_id: f0648e102917955d0a22ac4fbecbe5a3
+
+  # If we manually turn on the fan to cool the room down, make sure to
+  # turn it off when we don't need it anymore.
+  - if:
+      - condition: and
+        conditions:
+          - condition: state
+            entity_id: fan.air_purifier_fan
+            state: "on"
+
+          - condition: state
+            entity_id: climate.air_purifier_fan
+            state: "cool"
+
+          - condition: numeric_state
+            entity_id: sensor.air_purifier_fan_temperature
+            below: 70
+    then:
+      - service: fan.turn_off
+        data: {}
+        target:
+          device_id: f0648e102917955d0a22ac4fbecbe5a3
+

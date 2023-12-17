@@ -1,0 +1,8 @@
+# This speeds up blueprint development by reloading configurations automatically,
+# when they are updated.
+
+alias: Reload automations on file change
+
+use_blueprint:
+  path: vorion/reload-automations-automatically-when-a-blueprint-is-changed.yaml
+
