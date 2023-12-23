@@ -32,13 +32,13 @@ action:
             state: "off"
 
           # NOTE: Currently, we only care about heating the room in the evening.
-          #- condition: time
-            #after: "19:30:00"
-            #before: "08:30:00"
+          - condition: time
+            after: "19:00:00"
+            before: "07:30:00"
 
           - condition: numeric_state
             entity_id: sensor.air_purifier_fan_temperature
-            below: 68
+            below: 68.5
     then:
       - service: fan.turn_on
         data:
