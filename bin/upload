@@ -1,0 +1,32 @@
+#!/bin/bash
+
+function main() {
+    if [[ $# != 1 ]]; then
+        usage
+        return
+    fi
+
+    local host="$1"
+
+    for filepath in automations configuration.yaml
+    do
+        ssh $host "rm -r /config/$filepath"
+        scp -r "./$filepath" $host:/config/
+    done
+
+    # TODO: can we check and refresh configurations via CLI?
+}
+
+function filesToCopy() {
+    # TODO: we want to use git tracked files here, otherwise we may copy
+    # swap files over.
+    echo "TODO"
+}
+
+function usage() {
+    echo "Usage: ./$0 <host>"
+    echo "Uploads homeassistant configurations to the specified host."
+}
+
+main "$@"
+
