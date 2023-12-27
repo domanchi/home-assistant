@@ -35,17 +35,20 @@ action:
         target:
           device_id: c22dbfaab2c97feb31a3333c0a50c8c1
 
-  # NOTE: Until we get music integrated with this, let's just use this
-  # for development
+  # Play music.
   - if:
       - condition: template
         value_template: "{{ trigger.payload_json.action == 'off' }}"
     then:
-      - service: light.turn_off
-        data: {}
-        target:
-          device_id: c22dbfaab2c97feb31a3333c0a50c8c1
+      - service: media_player.play_media
+        data:
+          enqueue: replace
+          media_content_type: playlist
 
+          # NOTE: This corresponds to the name of the HEOS managed playlist.
+          media_content_id: "Chinese Pop"
+        target:
+          device_id: 59fef5200aac2941d3a580287413dd49
 
   # NOTE: Unfortunately, we need to catch this on button press (rather than
   # being independent to actual usage) because I can't get status requests to
