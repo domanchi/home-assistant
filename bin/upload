@@ -8,7 +8,7 @@ function main() {
 
     local host="$1"
 
-    for filepath in automations configuration.yaml
+    for filepath in automations scripts configuration.yaml
     do
         ssh $host "rm -r /config/$filepath"
         scp -r "./$filepath" $host:/config/

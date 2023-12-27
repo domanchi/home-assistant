@@ -40,15 +40,63 @@ action:
       - condition: template
         value_template: "{{ trigger.payload_json.action == 'off' }}"
     then:
-      - service: media_player.play_media
+      - service: script.start_playlist
         data:
-          enqueue: replace
-          media_content_type: playlist
+          target: 59fef5200aac2941d3a580287413dd49
 
-          # NOTE: This corresponds to the name of the HEOS managed playlist.
-          media_content_id: "Chinese Pop"
+  # Stop music
+  - if:
+      - condition: template
+        value_template: "{{ trigger.payload_json.action == 'brightness_move_down' }}"
+    then:
+      - service: media_player.media_stop
+        data: {}
         target:
           device_id: 59fef5200aac2941d3a580287413dd49
+
+  # NOTE: Saver doesn't support default arguments right now, so we'll have to
+  # manually initialize it before this can work.
+  #
+  # The variables to initialize are:
+  #   - playlist_id: 0
+  #   - playlists:   [{ name: "", volume: 0 }, ...]
+  - if:
+      - condition: template
+        value_template: "{{ trigger.payload_json.action == 'arrow_left_click' }}"
+    then:
+      - service: saver.set_variable
+        data:
+          name: playlist_id
+          value: "{{ ((saver_variable('playlist_id') | int) - 1) % (saver_variable('playlists') | from_json | length) }}"
+
+      # Allow reloading of playlist if already in playing state.
+      - if:
+          - condition: state
+            entity_id: media_player.home_theater
+            state: playing
+        then:
+          - service: script.start_playlist
+            data:
+              target: 59fef5200aac2941d3a580287413dd49
+
+  - if:
+      - condition: template
+        value_template: "{{ trigger.payload_json.action == 'arrow_right_click' }}"
+    then:
+      - service: saver.set_variable
+        data:
+          name: playlist_id
+          value: "{{ ((saver_variable('playlist_id') | int) + 1) % (saver_variable('playlists') | from_json | length) }}"
+
+      # Allow reloading of playlist if already in playing state.
+      - if:
+          - condition: state
+            entity_id: media_player.home_theater
+            state: playing
+        then:
+          - service: script.start_playlist
+            data:
+              target: 59fef5200aac2941d3a580287413dd49
 
   # NOTE: Unfortunately, we need to catch this on button press (rather than
   # being independent to actual usage) because I can't get status requests to
@@ -68,3 +116,4 @@ action:
                   type: mrkdwn
                   text: The *IKEA Switch* needs its battery changed.
                     It is currently on *{{ trigger.payload_json.battery}}%*.
+
