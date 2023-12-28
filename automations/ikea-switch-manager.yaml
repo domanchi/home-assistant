@@ -43,6 +43,10 @@ action:
       - service: script.start_playlist
         data:
           target: 59fef5200aac2941d3a580287413dd49
+      - service: script.fade_out
+        data:
+          entity_id: "media_player.home_theater"
+          initial_delay: 45
 
   # Stop music
   - if:

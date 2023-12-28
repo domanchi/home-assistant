@@ -1,0 +1,77 @@
+fade_out:
+  mode: single
+  alias: Fade Out
+  description: Gradually decreases the volume of a given media player, and turns it off once complete.
+  variables:
+    delay_seconds_per_decrease: 5
+    default_min_volume: 0.2
+    fade_step: 0.05
+  fields:
+    entity_id:
+      name: Entity
+      description: The media_player entity_id to apply volume fade.
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain:
+              - media_player
+    initial_delay:
+      name: Initial Delay
+      description: Number of minutes to wait, before applying fade.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: minutes
+    min_volume:
+      name: Minimum Volume
+      description: The desired volume to fade down to, before turning off the system.
+      default: 0.25
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.05
+  sequence:
+    - if:
+      - condition: template
+        alias: Check if device is on.
+        value_template: "{{ is_state(entity_id, 'off') }}"
+      then:
+        - stop: Entity is not currently on.
+    - variables:
+        original_volume: "{{ state_attr(entity_id, 'volume_level') | float }}"
+    - delay:
+        minutes: "{{ initial_delay or 0 }}"
+
+    # Fade
+    - repeat:
+        sequence:
+          - service: media_player.volume_set
+            data:
+              volume_level: "{{ (state_attr(entity_id, 'volume_level') | float) - fade_step }}"
+            target:
+              entity_id: "{{ entity_id }}"
+          - delay:
+              seconds: "{{ delay_seconds_per_decrease }}"
+        while:
+          - alias: Volume level above minimum volume.
+            condition: template
+            value_template: "{{ (state_attr(entity_id, 'volume_level') | float) > (min_volume|default(default_min_volume)) }}"
+
+    - service: media_player.media_pause
+      target:
+        entity_id: "{{ entity_id }}"
+
+    # Reset volume after short delay, so we make sure the track is paused first.
+    - delay:
+        seconds: 5
+
+    - service: media_player.volume_set
+      data:
+        volume_level: "{{ original_volume }}"
+      target:
+        entity_id: "{{ entity_id }}"
+
