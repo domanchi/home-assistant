@@ -3,7 +3,7 @@
 # and 12 event listeners (each button has press, hold, release).
 
 id: "ikea-switch-manager"
-mode: single
+mode: parallel
 alias: IKEA Switch Manager
 description: Action to take when the IKEA Switch's buttons are pressed.
 
@@ -15,6 +15,33 @@ trigger:
 condition: []
 
 action:
+  # We want to handle parallel actions, but we want each individual action to
+  # be synchronous. Therefore, we add a mutex on each invoked action.
+  #
+  # NOTE: For some reason, parallel mode sometimes causes this to occur.
+  # Sanity check this to prevent unexpected triggers.
+  - if:
+      - condition: template
+        value_template: "{{ trigger.payload_json.action == '' }}"
+    then:
+      - stop: No action identified.
+
+  # NOTE: Saver doesn't support default arguments right now, so we'll have to
+  # manually initialize it before this can work.
+  #
+  # The variables to initialize are:
+  #   - mutex.switch: []
+  - if:
+      - condition: template
+        value_template: "{{ trigger.payload_json.action in (saver_variable('mutex.switch') | from_json) }}"
+    then:
+      - stop: Action is currently processing.
+    else:
+      - service: saver.set_variable
+        data:
+          name: mutex.switch
+          value: "{{ ((saver_variable('mutex.switch') | from_json) + [trigger.payload_json.action]) | to_json}}"
+
   # Control a night light, with auto-sleep functionality.
   - if:
       - condition: template
@@ -64,6 +91,8 @@ action:
   # The variables to initialize are:
   #   - playlist_id: 0
   #   - playlists:   [{ name: "", volume: 0 }, ...]
+  #
+  # TODO: setup volume
   - if:
       - condition: template
         value_template: "{{ trigger.payload_json.action == 'arrow_left_click' }}"
@@ -101,6 +130,12 @@ action:
           - service: script.start_playlist
             data:
               target: 59fef5200aac2941d3a580287413dd49
+
+  # Clear the mutex once complete.
+  - service: saver.set_variable
+    data:
+      name: mutex.switch
+      value: "{{ (saver_variable('mutex.switch') | from_json) | reject('==', trigger.payload_json.action) | list | to_json }}"
 
   # NOTE: Unfortunately, we need to catch this on button press (rather than
   # being independent to actual usage) because I can't get status requests to
