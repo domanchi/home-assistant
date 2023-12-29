@@ -8,19 +8,18 @@ function main() {
 
     local host="$1"
 
-    for filepath in automations scripts configuration.yaml
+    ssh $host "rm -r /config/automations /config/scripts /config/configuration.yaml"
+    for filepath in `filesToCopy`
     do
-        ssh $host "rm -r /config/$filepath"
-        scp -r "./$filepath" $host:/config/
+        scp "./$filepath" $host:/config/
     done
 
     # TODO: can we check and refresh configurations via CLI?
 }
 
 function filesToCopy() {
-    # TODO: we want to use git tracked files here, otherwise we may copy
-    # swap files over.
-    echo "TODO"
+    git ls-files | grep -E '^(automations|scripts)/'
+    echo "configuration.yaml"
 }
 
 function usage() {
