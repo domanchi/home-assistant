@@ -15,6 +15,9 @@ trigger:
 condition: []
 
 action:
+  - variables:
+      sleep_time_minutes: 45
+
   # We want to handle parallel actions, but we want each individual action to
   # be synchronous. Therefore, we add a mutex on each invoked action.
   #
@@ -70,10 +73,27 @@ action:
       - service: script.start_playlist
         data:
           target: 59fef5200aac2941d3a580287413dd49
-      - service: script.fade_out
-        data:
-          entity_id: "media_player.home_theater"
-          initial_delay: 45
+
+      # NOTE: Implement wait here (rather than setting the initial_delay
+      # parameter), so that we can essentially use the mutex / CV without a
+      # leaky abstraction within the fader.
+      - repeat:
+          sequence:
+            - delay:
+                minutes: 1
+          while:
+            - condition: template
+              value_template: "{{ trigger.payload_json.action in (saver_variable('mutex.switch') | from_json) }}"
+            - condition: template
+              value_template: "{{ repeat.index < sleep_time_minutes }}"
+
+      - if:
+          - condition: template
+            value_template: "{{ trigger.payload_json.action in (saver_variable('mutex.switch') | from_json) }}"
+        then:
+          - service: script.fade_out
+            data:
+              entity_id: "media_player.home_theater"
 
   # Stop music
   - if:
@@ -84,6 +104,12 @@ action:
         data: {}
         target:
           device_id: 59fef5200aac2941d3a580287413dd49
+
+      # Clear the mutex on the play action
+      - service: saver.set_variable
+        data:
+          name: mutex.switch
+          value: "{{ (saver_variable('mutex.switch') | from_json) | reject('==', 'off') | list | to_json }}"
 
   # NOTE: Saver doesn't support default arguments right now, so we'll have to
   # manually initialize it before this can work.

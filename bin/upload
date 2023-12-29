@@ -8,10 +8,10 @@ function main() {
 
     local host="$1"
 
-    ssh $host "rm -r /config/automations /config/scripts /config/configuration.yaml"
+    ssh $host "rm /config/automations/* /config/scripts/* /config/configuration.yaml"
     for filepath in `filesToCopy`
     do
-        scp "./$filepath" $host:/config/
+        scp "./$filepath" "$host:/config/$filepath"
     done
 
     # TODO: can we check and refresh configurations via CLI?
