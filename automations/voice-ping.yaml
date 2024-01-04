@@ -1,0 +1,17 @@
+# This automation allows us to test a voice command.
+
+id: "voice-ping"
+mode: single
+alias: Voice Loopback Test
+
+trigger:
+  - platform: conversation
+    command: ping
+
+condition: []
+
+action:
+  - service: notify.mobile_app_aaron
+    data:
+      message: PONG
+
