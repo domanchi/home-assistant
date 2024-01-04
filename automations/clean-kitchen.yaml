@@ -1,6 +1,6 @@
 # This automation allows us to trigger a kitchen clean via voice.
 
-id: "kitchen-clean"
+id: "clean-kitchen"
 mode: single
 alias: Voice-Activated Kitchen Clean
 description: >-
@@ -19,7 +19,7 @@ action:
       params:
         - repeat: 1
           segments:
-            # This corresponds to the kitchen,
+            # This corresponds to the kitchen.
             #
             # See https://www.home-assistant.io/integrations/roborock/#how-can-i-clean-a-specific-room
             # for more details.
