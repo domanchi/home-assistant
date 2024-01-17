@@ -9,6 +9,17 @@ automation: !include_dir_list automations
 script: !include_dir_list scripts
 scene: !include scenes.yaml
 
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    # Allow Nginx Proxy Manager to redirect requests to homeassistant.
+    #
+    # NOTE: Currently uncertain how these IPs change. Subnet masks are
+    # permitted, but I'm uncertain the IP range that may be dynamically
+    # allocated.
+    #
+    # Consider improving this when we have more details.
+    - 172.30.33.3
 
 folder_watcher:
   # Used for "Reload Automation on File Change" blueprint
