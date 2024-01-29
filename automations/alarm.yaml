@@ -1,0 +1,38 @@
+# This plays soft music when the alarm is triggered, to gently stir awake.
+
+id: "alarm"
+mode: single
+alias: "Morning Birdsong Alarm"
+description: "Plays bird song in the morning, to gently stir awake."
+
+trigger:
+  - platform: time
+    at: "06:00:00"
+
+condition:
+  - condition: time
+    weekday:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+
+action:
+  # TODO: This should fade up to 0.42 over 60 minutes.
+  - service: media_player.volume_set
+    data:
+      volume_level: 0.31
+    target:
+      entity_id: media_player.bose_bedroom_2
+
+  - service: media_player.play_media
+    target:
+      entity_id: media_player.bose_bedroom_2
+    data:
+      # NOTE: To get this value for a NAS URI, follow these instructions:
+      #   1. Play the track in HomeAssistant media player, for the selected device.
+      #   2. View the websocket traffic in Developer Tools to find the exact service call to
+      #      replicate.
+      media_content_type: "audio/mp4"
+      media_content_id: "media-source://dlna_dms/synologyrouter/:22$@36956"
