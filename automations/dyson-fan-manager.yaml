@@ -34,11 +34,11 @@ action:
           # NOTE: Currently, we only care about heating the room in the evening.
           - condition: time
             after: "19:00:00"
-            before: "07:30:00"
+            before: "07:00:00"
 
           - condition: numeric_state
             entity_id: sensor.air_purifier_fan_temperature
-            below: 68.5
+            below: 67
     then:
       - service: fan.turn_on
         data:
@@ -71,7 +71,7 @@ action:
 
           - condition: numeric_state
             entity_id: sensor.air_purifier_fan_temperature
-            above: 70
+            above: 69
     then:
       - service: fan.turn_off
         data: {}
@@ -93,7 +93,7 @@ action:
 
           - condition: numeric_state
             entity_id: sensor.air_purifier_fan_temperature
-            below: 70
+            below: 72
     then:
       - service: fan.turn_off
         data: {}

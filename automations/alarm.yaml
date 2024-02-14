@@ -19,7 +19,12 @@ condition:
       - fri
 
 action:
-  # TODO: This should fade up to 0.42 over 60 minutes.
+  # NOTE: We keep it a static value (instead of fading up), to avoid _actually_ waking up anyone.
+  #       The current purpose is to notify listeners that it is after 6AM (a reasonable time to
+  #       get up), without them needing to check the clock.
+  #
+  #       Essentially, if you wake up and hear birds, you can get out of bed. Otherwise, try going
+  #       back to sleep!
   - service: media_player.volume_set
     data:
       volume_level: 0.31
