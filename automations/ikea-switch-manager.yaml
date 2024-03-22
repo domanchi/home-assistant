@@ -65,6 +65,23 @@ action:
         target:
           device_id: c22dbfaab2c97feb31a3333c0a50c8c1
 
+  # If we accidentally turn on the light, it's nice to have an option to turn it
+  # off again.
+  - if:
+      - condition: template
+        value_template: "{{ trigger.payload_json.action == 'brightness_move_up' }}"
+    then:
+      - service: light.turn_off
+        data: {}
+        target:
+          device_id: c22dbfaab2c97feb31a3333c0a50c8c1
+
+      # Clear the mutex on light.turn_on action.
+      - service: saver.set_variable
+        data:
+          name: mutex.switch
+          value: "{{ (saver_variable('mutex.switch') | from_json) | reject('==', 'on') | list | to_json }}"
+
   # Play music.
   - if:
       - condition: template
