@@ -1,0 +1,139 @@
+id: "recurring-chores"
+mode: single
+alias: "Recurring Chores"
+description: >-
+  Adds TODO item for recurring chores.
+
+# NOTE: HomeAssistant does not support scheduling things any longer than a
+# daily basis. Consequently, we implement a poor man's cron job by kicking
+# it off 4AM every day, and using the switch statement below to figure out
+# which chores should be added to the chores list.
+#
+# This method avoids having multiple different automation files for a similar
+# chore handler.
+trigger:
+  - platform: time
+    at: "10:00:00"
+
+action:
+  - choose:
+      #
+      # Weekly
+      #
+      - conditions:
+          # Trigger on Fridays
+          - condition: template
+            value_template: "{{ now().weekday() == 4 }}"
+        sequence:
+          - action: todoist.new_task
+            data: &new_task
+              project: Chores
+              labels: recurring
+              content: Send Rosie into Bedroom
+
+          - &notify_slack
+            action: notify.pockets_inc
+            data:
+              target: "#chores"
+              message: "I've added a chore to your to-do list"
+              data:
+              blocks:
+                - type: section
+                  text:
+                    type: mrkdwn
+                    text: >-
+                      A recurring chore has been added to your to-do list.
+                      For more information, check out your <https://app.todoist.com/app/project/chores-2337975766|active to-do items>.
+
+      #
+      # Monthly
+      #
+      - conditions:
+          # Trigger event on the first of every month.
+          - condition: template
+            value_template: "{{ now().day == 1 }}"
+        sequence:
+          - action: todoist.new_task
+            data:
+              <<: *new_task
+              content: Wash Bedsheets
+
+          - <<: *notify_slack
+
+      - conditions:
+          # NOTE: We split up the schedules to prevent "thundering herd"
+          # issues with chore additions.
+          - condition: template
+            value_template: "{{ now() == 8 }}"
+        sequence:
+          - action: todoist.new_task
+            data:
+              <<: *new_task
+              content: Run dishwasher
+
+          - <<: *notify_slack
+
+      - conditions:
+          - condition: template
+            value_template: "{{ now() == 10 }}"
+        sequence:
+          - action: todoist.new_task
+            data:
+              <<: *new_task
+              content: Clean the bathroom
+
+          - action: todoist.new_task
+            data:
+              <<: *new_task
+              content: Clean the counter-tops
+
+          - <<: *notify_slack
+
+      #
+      # Less Frequent
+      #
+      - conditions:
+          - condition: template
+            value_template: "{{ now().month % 2 == 0 and now().day == 5 }}"
+        sequence:
+          - action: todoist.new_task
+            data:
+              <<: *new_task
+              content: Replace baking soda in fridge
+
+          - action: todoist.new_task
+            data:
+              <<: *new_task
+              content: Replace baking soda in trash
+
+      - conditions:
+          # Once a quarter
+          - condition: template
+            value_template: "{{ now().month % 3 == 0 and now().day == 5 }}"
+        sequence:
+          - action: todoist.new_task
+            data:
+              <<: *new_task
+              content: Clean the washer/dryer
+
+      - conditions:
+          # Every six months (nov and june)
+          # Target Thanksgiving, so there's additional time.
+          - condition: template
+            value_template: "{{ now().month % 6 == 0 and now().day == 24 }}"
+        sequence:
+          - action: todoist.new_task
+            data:
+              <<: *new_task
+              content: Wash Plushies
+
+      - conditions:
+          # Every year (December 17th)
+          - condition: template
+            value_template: "{{ now().timetuple().tm_yday == 351 }}"
+        sequence:
+          - action: todoist.new_task
+            data:
+              <<: *new_task
+              content: Clean out fridge
+
