@@ -64,7 +64,7 @@ action:
           # NOTE: We split up the schedules to prevent "thundering herd"
           # issues with chore additions.
           - condition: template
-            value_template: "{{ now() == 8 }}"
+            value_template: "{{ now().day == 8 }}"
         sequence:
           - action: todoist.new_task
             data:
@@ -75,7 +75,7 @@ action:
 
       - conditions:
           - condition: template
-            value_template: "{{ now() == 10 }}"
+            value_template: "{{ now().day == 10 }}"
         sequence:
           - action: todoist.new_task
             data:
