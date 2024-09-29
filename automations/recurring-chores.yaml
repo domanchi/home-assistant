@@ -46,6 +46,21 @@ action:
                       For more information, check out your <https://app.todoist.com/app/project/chores-2337975766|active to-do items>.
 
       #
+      # Fortnightly
+      #
+      - conditions:
+          - condition: template
+            value_template: >
+              "{{ int(now().strftime('%V')) % 2 == 0 and now().weekday() == 3 }}"
+        sequence:
+          - action: todoist.new_task
+            data:
+              <<: *new_task
+              content: Run dishwasher
+
+          - <<: *notify_slack
+
+      #
       # Monthly
       #
       - conditions:
@@ -63,17 +78,6 @@ action:
       - conditions:
           # NOTE: We split up the schedules to prevent "thundering herd"
           # issues with chore additions.
-          - condition: template
-            value_template: "{{ now().day == 8 }}"
-        sequence:
-          - action: todoist.new_task
-            data:
-              <<: *new_task
-              content: Run dishwasher
-
-          - <<: *notify_slack
-
-      - conditions:
           - condition: template
             value_template: "{{ now().day == 10 }}"
         sequence:
