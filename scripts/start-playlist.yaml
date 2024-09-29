@@ -3,7 +3,7 @@ start_playlist:
   description: Loads and plays a HEOS playlist, as specified in the saver state.
   fields:
     target:
-      name: Device ID
+      name: Entity ID
       required: true
   sequence:
     - service: media_player.play_media
@@ -14,5 +14,5 @@ start_playlist:
         # NOTE: This corresponds to the name of the HEOS managed playlist.
         media_content_id: "{{ (saver_variable('playlists') | from_json)[saver_variable('playlist_id')|int] }}"
       target:
-        device_id: "{{ target }}"
+        entity_id: "{{ target }}"
 

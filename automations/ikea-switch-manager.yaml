@@ -89,7 +89,7 @@ action:
     then:
       - service: script.start_playlist
         data:
-          target: 59fef5200aac2941d3a580287413dd49
+          target: media_player.home_theater
 
       # NOTE: Implement wait here (rather than setting the initial_delay
       # parameter), so that we can essentially use the mutex / CV without a
@@ -111,6 +111,8 @@ action:
           - service: script.fade_out
             data:
               entity_id: "media_player.home_theater"
+
+      # TODO: announce audio
 
   # Stop music
   - if:
@@ -153,7 +155,7 @@ action:
         then:
           - service: script.start_playlist
             data:
-              target: 59fef5200aac2941d3a580287413dd49
+              target: media_player.home_theater
 
   - if:
       - condition: template
@@ -172,7 +174,7 @@ action:
         then:
           - service: script.start_playlist
             data:
-              target: 59fef5200aac2941d3a580287413dd49
+              target: media_player.home_theater
 
   # Clear the mutex once complete.
   - service: saver.set_variable
