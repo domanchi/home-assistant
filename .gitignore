@@ -2,4 +2,4 @@
 *.pyc
 .gitsecret/keys/random_seed
 !*.secret
-deploy/secrets.py
+modules/deploy/secrets.py

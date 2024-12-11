@@ -1,6 +1,6 @@
 .PHONY: test
 test: virtualenv
-	venv/bin/python -m pytest deploy/tests -v
+	venv/bin/python -m pytest modules/deploy/tests -v
 
 virtualenv: venv/bin/activate
 venv/bin/activate:

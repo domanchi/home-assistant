@@ -3,8 +3,8 @@ import subprocess
 
 import pytest
 
-from deploy.git import Git
-from deploy.git import FileOperation
+from modules.deploy.git import Git
+from modules.deploy.git import FileOperation
 
 
 class TestGit:

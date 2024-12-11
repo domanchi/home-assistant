@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from deploy import logger
+from modules.deploy import logger
 
 
 @pytest.fixture

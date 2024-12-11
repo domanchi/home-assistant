@@ -3,9 +3,9 @@ import os
 
 import pytest
 
-from deploy.git import File
-from deploy.git import FileOperation
-from deploy.upload import config_uploader
+from modules.deploy.git import File
+from modules.deploy.git import FileOperation
+from modules.deploy.upload import config_uploader
 
 
 class TestUploadConfigs:
