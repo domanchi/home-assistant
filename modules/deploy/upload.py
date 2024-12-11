@@ -73,12 +73,16 @@ class stage:
     """
     def __init__(self, conn: Connection, staged: list[File]) -> None:
         self.conn = conn
-        self.files = staged
+        self._files = staged
+
+    @property
+    def files(self) -> list[str]:
+        return [f.name for f in self._files]
 
     def commit(self) -> None:
         """During commit, old files are deleted."""
         to_delete: list[str] = []
-        for file in self.files:
+        for file in self._files:
             if file.operation == FileOperation.ADDED:
                 continue
 
@@ -94,7 +98,7 @@ class stage:
     def revert(self) -> None:
         """During revert, new files are removed, and backups are restored."""
         to_delete: list[str] = []
-        for file in self.files:
+        for file in self._files:
             if file.operation == FileOperation.DELETED:
                 continue
 

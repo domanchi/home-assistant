@@ -22,7 +22,7 @@ def run(
         return
 
     conn = Connection(host=host)
-    ha = homeassistant(conn=conn)
+    ha = homeassistant(base="control.home")
 
     # TODO: We should probably push this into config_uploader, when we need to handle more than
     # automations.
@@ -34,10 +34,12 @@ def run(
         )
 
         try:
-            ha.check_configs()
+            ha.check_configs(*changes.files)
         except ConfigurationError as e:
             has_failed = True
-            logger.error(str(e))
+            for error in e.args[0]:
+                logger.error(error)
+
             changes.revert()
             continue
 
