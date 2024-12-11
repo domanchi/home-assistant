@@ -42,23 +42,23 @@ class TestUploadConfigs:
 
         changes = u.upload(tempdir)
         assert [
-            "scp fileA homeassistant@/config/fileA",
+            "scp fileA homeassistant@/fileA",
 
-            "ssh homeassistant mv /config/fileB /config/fileB.bak",
-            "scp fileB homeassistant@/config/fileB",
+            "ssh homeassistant mv /fileB /fileB.bak",
+            "scp fileB homeassistant@/fileB",
         ] == u.conn.commands
 
         u.conn.commands = []
         changes.revert()
         assert u.conn.commands == [
-            "ssh homeassistant mv /config/fileB.bak /config/fileB",
-            "ssh homeassistant rm /config/fileA",
+            "ssh homeassistant mv /fileB.bak /fileB",
+            "ssh homeassistant rm /fileA",
         ]
 
         u.conn.commands = []
         changes.commit()
         assert u.conn.commands == [
-            "ssh homeassistant rm /config/fileB.bak /config/fileC",
+            "ssh homeassistant rm /fileB.bak /fileC",
         ]
 
     @staticmethod
@@ -85,7 +85,7 @@ class TestUploadConfigs:
 
         changes.commit()
         assert u.conn.commands == [
-            "ssh homeassistant rm /config/fileA /config/fileB",
+            "ssh homeassistant rm /fileA /fileB",
         ]
 
 

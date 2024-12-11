@@ -51,19 +51,12 @@ class config_uploader:
                 continue
 
             if file.operation == FileOperation.MODIFIED:
-                self.conn.do(
-                    "mv",
-                    os.path.join("/config", file.name),
-                    os.path.join("/config", f"{file.name}.bak"),
-                )
+                self.conn.do("mv", f"/{file.name}", f"/{file.name}.bak")
 
             try:
-                self.conn.copy(
-                    os.path.join(file.name),
-                    os.path.join("/config", file.name),
-                )
+                self.conn.copy(file.name, f"/{file.name}")
             except subprocess.CalledProcessError as e:
-                logger.error(e.stderr)
+                logger.error(e.stderr.decode())
                 raise
 
         logger.info("files uploaded to server")
@@ -90,10 +83,10 @@ class stage:
                 continue
 
             elif file.operation == FileOperation.MODIFIED:
-                to_delete.append(os.path.join("/config", f"{file.name}.bak"))
+                to_delete.append(f"/{file.name}.bak")
 
             elif file.operation == FileOperation.DELETED:
-                to_delete.append(os.path.join("/config", file.name))
+                to_delete.append(f"/{file.name}")
 
         self._delete(*to_delete)
         logger.info("changes committed to server")
@@ -106,14 +99,10 @@ class stage:
                 continue
 
             elif file.operation == FileOperation.MODIFIED:
-                self.conn.do(
-                    "mv",
-                    os.path.join("/config", f"{file.name}.bak"),
-                    os.path.join("/config", file.name),
-                )
+                self.conn.do("mv", f"/{file.name}.bak", f"/{file.name}")
             
             elif file.operation == FileOperation.ADDED:
-                to_delete.append(os.path.join("/config", file.name))
+                to_delete.append(f"/{file.name}")
         
         self._delete(*to_delete)
         logger.info("changes reverted from server")
