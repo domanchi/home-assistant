@@ -56,5 +56,5 @@ def run(
 
 def synchronized_paths(root: str) -> list[str]:
     return [
-        os.path.join(git.root, "automations"),
+        os.path.join(git.root, "config/automations"),
     ]
