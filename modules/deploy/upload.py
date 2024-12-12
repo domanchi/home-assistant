@@ -79,7 +79,13 @@ class stage:
 
     @property
     def files(self) -> list[str]:
-        return [f.name for f in self._files]
+        return [
+            f.name
+            for f in self._files
+
+            # NOTE: Won't be able to read files if it is deleted.
+            if f.operation != FileOperation.DELETED
+        ]
 
     def commit(self) -> None:
         """During commit, old files are deleted."""
