@@ -2,6 +2,7 @@
 #
 # See modules/reminder for more details.
 
+id: "recurring-chores"
 mode: single
 alias: "Recurring Chores"
 description: >-

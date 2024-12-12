@@ -1,0 +1,26 @@
+# This script is the inverse of its counterpart "light-on.yaml".
+# It disables the light, and stops any pending delays for keeping the light on.
+
+light_off:
+  mode: single
+  alias: Lights Out
+  description: >-
+    Turns off the light, and kills any other script managing the light lifecycle.
+
+  fields:
+    device:
+      name: Device
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain: "light"
+
+  sequence:
+    - service: light.turn_off
+      target:
+        entity_id: "{{ device }}"
+
+    - service: script.turn_off
+      target:
+        entity_id: script.light_on

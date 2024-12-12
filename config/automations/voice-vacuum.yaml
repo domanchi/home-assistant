@@ -7,6 +7,7 @@
 # NOTE: See https://www.home-assistant.io/integrations/roborock/#how-can-i-clean-a-specific-room
 # for more details on how to get room -> segment id mapping.
 
+id: "voice-vacuum"
 mode: single
 alias: Voice-Activated Vacuum
 description: >-

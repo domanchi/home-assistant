@@ -1,0 +1,46 @@
+light_on:
+  mode: single
+  alias: Auto Light On
+  description: >-
+    Turns on the light for a set duration.
+
+  fields:
+    device:
+      name: Device
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain: "light"
+
+    brightness:
+      name: Brightness
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 100
+
+    duration:
+      name: Duration
+      description: >-
+        Configures how long the light should be on, before it turns off by itself.
+
+      selector:
+        duration: {}
+
+  sequence:
+    - service: light.turn_on
+      data:
+        brightness_pct: "{{ brightness }}"
+      target:
+        entity_id: "{{ device }}"
+
+    - delay:
+        hours: "{{ duration.hours }}"
+        minutes: "{{ duration.minutes }}"
+        seconds: "{{ duration.seconds }}"
+
+    - service: light.turn_off
+      target:
+        entity_id: "{{ device }}"

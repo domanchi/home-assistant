@@ -12,22 +12,17 @@ trigger:
   - platform: mqtt
     topic: zigbee2mqtt/Button
 
-condition: []
+condition:
+  - condition: template
+    value_template: "{{ trigger.payload_json.action != '' }}"
 
 action:
   - variables:
       sleep_time_minutes: 45
 
-  # We want to handle parallel actions, but we want each individual action to
-  # be synchronous. Therefore, we add a mutex on each invoked action.
-  #
-  # NOTE: For some reason, parallel mode sometimes causes this to occur.
-  # Sanity check this to prevent unexpected triggers.
-  - if:
-      - condition: template
-        value_template: "{{ trigger.payload_json.action == '' }}"
-    then:
-      - stop: No action identified.
+      # This is especially useful when performing traces, since we can see the
+      # value used to perform conditional processing.
+      action: "{{ trigger.payload_json.action }}"
 
   # NOTE: Saver doesn't support default arguments right now, so we'll have to
   # manually initialize it before this can work.
@@ -36,56 +31,41 @@ action:
   #   - mutex.switch: []
   - if:
       - condition: template
-        value_template: "{{ trigger.payload_json.action in (saver_variable('mutex.switch') | from_json) }}"
+        value_template: "{{ action in (saver_variable('mutex.switch') | from_json) }}"
     then:
       - stop: Action is currently processing.
     else:
       - service: saver.set_variable
         data:
           name: mutex.switch
-          value: "{{ ((saver_variable('mutex.switch') | from_json) + [trigger.payload_json.action]) | to_json}}"
+          value: "{{ ((saver_variable('mutex.switch') | from_json) + [action]) | to_json}}"
 
   # Control a night light, with auto-sleep functionality.
   - if:
       - condition: template
-        value_template: "{{ trigger.payload_json.action == 'on' }}"
+        value_template: "{{ action == 'on' }}"
     then:
-      - service: light.turn_on
+      - service: script.light_on
         data:
-          brightness_pct: 10
-        target:
-          device_id: c22dbfaab2c97feb31a3333c0a50c8c1
-
-      # Wait for some time, before turning the night light off.
-      - delay:
-          hours: 2
-
-      - service: light.turn_off
-        data: {}
-        target:
-          device_id: c22dbfaab2c97feb31a3333c0a50c8c1
+          device: light.wiz
+          brightness: 10
+          duration:
+            hours: 2
 
   # If we accidentally turn on the light, it's nice to have an option to turn it
   # off again.
   - if:
       - condition: template
-        value_template: "{{ trigger.payload_json.action == 'brightness_move_up' }}"
+        value_template: "{{ action == 'brightness_move_up' }}"
     then:
-      - service: light.turn_off
-        data: {}
-        target:
-          device_id: c22dbfaab2c97feb31a3333c0a50c8c1
-
-      # Clear the mutex on light.turn_on action.
-      - service: saver.set_variable
+      - service: script.light_off
         data:
-          name: mutex.switch
-          value: "{{ (saver_variable('mutex.switch') | from_json) | reject('==', 'on') | list | to_json }}"
+          device: light.wiz
 
   # Play music.
   - if:
       - condition: template
-        value_template: "{{ trigger.payload_json.action == 'off' }}"
+        value_template: "{{ action == 'off' }}"
     then:
       - service: script.start_playlist
         data:
@@ -100,29 +80,29 @@ action:
                 minutes: 1
           while:
             - condition: template
-              value_template: "{{ trigger.payload_json.action in (saver_variable('mutex.switch') | from_json) }}"
+              value_template: "{{ action in (saver_variable('mutex.switch') | from_json) }}"
             - condition: template
               value_template: "{{ repeat.index < sleep_time_minutes }}"
 
       - if:
           - condition: template
-            value_template: "{{ trigger.payload_json.action in (saver_variable('mutex.switch') | from_json) }}"
+            value_template: "{{ action in (saver_variable('mutex.switch') | from_json) }}"
         then:
           - service: script.fade_out
             data:
-              entity_id: "media_player.home_theater"
+              entity_id: media_player.home_theater
 
       # TODO: announce audio
 
   # Stop music
   - if:
       - condition: template
-        value_template: "{{ trigger.payload_json.action == 'brightness_move_down' }}"
+        value_template: "{{ action == 'brightness_move_down' }}"
     then:
       - service: media_player.media_stop
         data: {}
         target:
-          device_id: 59fef5200aac2941d3a580287413dd49
+          entity_id: media_player.home_theater
 
       # Clear the mutex on the play action
       - service: saver.set_variable
@@ -140,7 +120,7 @@ action:
   # TODO: setup volume
   - if:
       - condition: template
-        value_template: "{{ trigger.payload_json.action == 'arrow_left_click' }}"
+        value_template: "{{ action == 'arrow_left_click' }}"
     then:
       - service: saver.set_variable
         data:
@@ -159,7 +139,7 @@ action:
 
   - if:
       - condition: template
-        value_template: "{{ trigger.payload_json.action == 'arrow_right_click' }}"
+        value_template: "{{ action == 'arrow_right_click' }}"
     then:
       - service: saver.set_variable
         data:
@@ -180,7 +160,7 @@ action:
   - service: saver.set_variable
     data:
       name: mutex.switch
-      value: "{{ (saver_variable('mutex.switch') | from_json) | reject('==', trigger.payload_json.action) | list | to_json }}"
+      value: "{{ (saver_variable('mutex.switch') | from_json) | reject('==', action) | list | to_json }}"
 
   # NOTE: Unfortunately, we need to catch this on button press (rather than
   # being independent to actual usage) because I can't get status requests to
