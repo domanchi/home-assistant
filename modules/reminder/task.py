@@ -31,6 +31,10 @@ tasklist = [
         cadence=Cadence.MONTHLY(1),
     ),
     Task(
+        description="Clean the humidifier",
+        cadence=Cadence.MONTHLY(1),
+    ),
+    Task(
         description="Clean the bathroom",
         cadence=Cadence.MONTHLY(10),
     ),

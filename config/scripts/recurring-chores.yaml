@@ -136,6 +136,33 @@ recurring_chores:
           content: Wash bedsheets
     - if:
       - condition: template
+        value_template: '{{ as_datetime(today).day == 1 }}'
+      then:
+      - action: logbook.log
+        data:
+          name: Recurring Chores
+          entity_id: script.recurring_chores
+          message: 'Added task: Clean the humidifier'
+      - action: notify.pockets_inc
+        data:
+          target: '{{ channel }}'
+          message: I've added a chore to your to-do list.
+          data:
+            blocks:
+            - type: section
+              text:
+                type: mrkdwn
+                text: I've added "*Clean the humidifier*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+                  list>.
+      - condition: template
+        value_template: '{{ add_task }}'
+      - action: todoist.new_task
+        data:
+          project: Chores
+          labels: recurring
+          content: Clean the humidifier
+    - if:
+      - condition: template
         value_template: '{{ as_datetime(today).day == 10 }}'
       then:
       - action: logbook.log
