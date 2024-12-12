@@ -1,6 +1,7 @@
 import argparse
 
 from . import logger
+from .main import PersistanceMode
 from .main import run
 
 
@@ -45,8 +46,15 @@ if __name__ == "__main__":
     args = parse_args()
     if args.v:
         logger.configure_verbosity(args.v)
+
     if not args.message:
         if not args.dry_run and not args.no_commit:
             raise argparse.ArgumentError(None, message="commit message must be specified")
 
-    run(commit_msg=args.message, dry_run=args.dry_run, should_commit=(not args.no_commit))
+    mode = PersistanceMode.ENABLED
+    if args.dry_run:
+        mode = PersistanceMode.DISABLED
+    elif args.no_commit:
+        mode = PersistanceMode.ONLY_HOST
+
+    run(commit_msg=args.message, mode=mode)

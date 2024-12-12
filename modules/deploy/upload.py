@@ -29,10 +29,11 @@ class config_uploader:
 
     def upload(self, path: str) -> "stage":
         """
-        :param path: absolute directory (prefix) to upload to remote host
+        :param path: relative path (compared to git root) to upload to remote host
         :raises: ValueError
         """
-        if not os.path.isdir(path):
+        path = os.path.join(self._git.root, path)
+        if not os.path.isdir(path) and not os.path.isfile(path):
             raise ValueError(f"no such path: '{path}'")
 
         root = self._git.root
@@ -79,6 +80,7 @@ class stage:
 
     @property
     def files(self) -> list[str]:
+        """Returns a set of newly added/modified files."""
         return [
             f.name
             for f in self._files

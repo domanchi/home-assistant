@@ -2,6 +2,7 @@ import asyncio
 import json
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+from typing import Optional
 
 import requests
 import websockets
@@ -48,30 +49,7 @@ class homeassistant:
         ]:
             self._session.post(f"http://{self.uri}/api/services/{service}/reload")
 
-    def check_configs(self, *files: str, force: bool = False) -> None:
-        """Checks configuration files for validity."""
-        warnings = asyncio.get_event_loop().run_until_complete(self._check_configs(*files))
-        if warnings:
-            if not force:
-                raise ConfigurationError(warnings)
-
-            for message in warnings:
-                logger.warning(message)
-        else:
-            logger.info("no issues found with HA configuration")
-
-    async def _check_configs(self, *files: str) -> list[str]:
-        return [
-            result
-            for results in await asyncio.gather(
-                self._validate_global_config(),
-                self._validate_automations(*files),
-            )
-            for result in results
-            if result
-        ]
-
-    async def _validate_global_config(self) -> list[str]:
+    def validate_global_configuration(self) -> str:
         """
         Check to make sure that configuration.yaml is valid.
         Returns warnings if an error is detected, but not loud enough to cause issues when
@@ -84,54 +62,96 @@ class homeassistant:
 
         response = result.json()
         if response.get("warnings"):
-            return [response["warnings"]]
+            return response["warnings"]
 
         if response.get("result") != "valid":
             raise ConfigurationError(response["errors"])
 
-        return []
+        return ""
 
-    async def _validate_automations(self, *files: str) -> list[str]:
-        """
-        Check to make sure that configured automations are valid.
-        Returns warnings if an error is detected.
+    def validate_automations(self, *files: str) -> str:
+        return asyncio.get_event_loop().run_until_complete(
+            self._validate_automations(*files),
+        )
 
-        :raises: NetworkInvariantError if websocket connection cannot be established.
-        """
+    async def _validate_automations(self, *files: str) -> str:
+        # NOTE: We need to do this synchronously, because websockets library does not
+        # permit multiple recv to occur at once.
+        results = []
         async with self._establish_websocket_connection() as ws:
-            # NOTE: We need to do this synchronously, because websockets library does not
-            # permit multiple recv to occur at once.
-            return [
-                item
-                for f in files
-                for item in await self._validate_automation(ws, f)
-            ]
+            for file in files:
+                with open(file) as f:
+                    contents = yaml.load(f)
 
-    async def _validate_automation(self, ws: ClientConnection, file: str) -> list[str]:
-        with open(file) as f:
-            contents = yaml.load(f)
+                response = await self._validate_script(
+                    ws,
+                    triggers=contents.get("trigger") or contents.get("triggers"),
+                    conditions=contents.get("condition") or contents.get("conditions"),
+                    actions=contents.get("action") or contents.get("actions"),
+                )
+                if response:
+                    results.append(f"'{file}' is invalid: {response}")
 
-        trigger = contents.get("trigger") or contents.get("triggers") or []
-        condition = contents.get("condition") or contents.get("conditions") or []
-        action = contents.get("action") or contents.get("actions") or []
+        return "\n".join(results)
+
+    def validate_scripts(self, *files: str) -> str:
+        return asyncio.get_event_loop().run_until_complete(
+            self._validate_scripts(*files),
+        )
+
+    async def _validate_scripts(self, *files: str) -> str:
+        results = []
+        async with self._establish_websocket_connection() as ws:
+            for file in files:
+                with open(file) as f:
+                    contents = yaml.load(f)
+
+                response = await self._validate_script(
+                    ws,
+                    actions=contents.get("sequence"),
+                )
+                if response:
+                    results.append(f"'{file}' is invalid: {response}")
+
+        return "\n".join(results)
+
+    async def _validate_script(
+        self,
+        ws: ClientConnection,
+        triggers: Optional[list] = None,
+        conditions: Optional[list] = None,
+        actions: Optional[list] = None,
+    ) -> str:
+        # Default values.
+        if not triggers:
+            triggers = []
+
+        if not conditions:
+            conditions = []
+
+        if not actions:
+            actions = []
 
         payload = {
             "id": self._id,
             "type": "validate_config",
-            "trigger": trigger,
-            "condition": condition,
-            "action": action,
+            "triggers": triggers,
+            "conditions": conditions,
+            "actions": actions,
         }
-
         self._id += 1
-        await ws.send(json.dumps(payload, separators=(",", ":")))
+
+        await ws.send(json.dumps(payload))
 
         message = json.loads(await ws.recv())
-        return [
-            f"{file}::{key} failed with error: {message['result'][key]['error']}"
-            for key in ["trigger", "condition", "action"]
+        if not message["success"]:
+            raise ConfigurationError(f"{message['error']['code']}: {message['error']['message']}")
+
+        return ";\n".join([
+            f"{key} failed with error: {message['result'][key]['error']}"
+            for key in ["triggers", "conditions", "actions"]
             if not message["result"][key]["valid"]
-        ]
+        ])
 
     @asynccontextmanager
     async def _establish_websocket_connection(self) -> AsyncGenerator[ClientConnection, None]:
