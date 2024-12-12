@@ -99,13 +99,12 @@ class homeassistant:
         :raises: NetworkInvariantError if websocket connection cannot be established.
         """
         async with self._establish_websocket_connection() as ws:
-            # Flatten results
+            # NOTE: We need to do this synchronously, because websockets library does not
+            # permit multiple recv to occur at once.
             return [
                 item
-                for result in await asyncio.gather(
-                    *[self._validate_automation(ws, f) for f in files],
-                )
-                for item in result
+                for f in files
+                for item in await self._validate_automation(ws, f)
             ]
 
     async def _validate_automation(self, ws: ClientConnection, file: str) -> list[str]:
