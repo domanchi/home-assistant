@@ -59,7 +59,9 @@ class config_uploader:
                 logger.error(e.stderr.decode())
                 raise
 
-        logger.info("files uploaded to server")
+        if staged:
+            logger.info("files uploaded to server")
+
         return stage(conn=self.conn, staged=staged)
 
 

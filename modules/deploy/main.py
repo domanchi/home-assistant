@@ -13,6 +13,7 @@ def run(
     commit_msg: str,
     host: str = "homeassistant",
     dry_run: bool = True,
+    should_commit: bool = True,
 ):
     """
     :param host: ssh target to connect to
@@ -32,6 +33,8 @@ def run(
             conn=conn,
             path=path,
         )
+        if not changes.files:
+            continue
 
         try:
             ha.check_configs(*changes.files)
@@ -51,7 +54,7 @@ def run(
         changes.commit()
         ha.reload()
 
-    if not has_failed:
+    if not has_failed and should_commit:
         git.commit(commit_msg)
         git.merge()
 
@@ -59,4 +62,5 @@ def run(
 def synchronized_paths(root: str) -> list[str]:
     return [
         os.path.join(git.root, "config/automations"),
+        os.path.join(git.root, "config/scripts"),
     ]

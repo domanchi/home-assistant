@@ -41,7 +41,12 @@ class homeassistant:
         # NOTE: If you need to reload other things, see
         # https://developers.home-assistant.io/docs/api/rest/ for more details.
         logger.info("reloading HA configuration")
-        self._session.post(f"http://{self.uri}/api/services/automation/reload")
+
+        for service in [
+            "automation",
+            "script",
+        ]:
+            self._session.post(f"http://{self.uri}/api/services/{service}/reload")
 
     def check_configs(self, *files: str, force: bool = False) -> None:
         """Checks configuration files for validity."""
