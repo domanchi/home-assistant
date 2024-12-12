@@ -21,15 +21,6 @@ http:
     # Consider improving this when we have more details.
     - 172.30.33.3
 
-folder_watcher:
-  # Used for "Reload Automation on File Change" blueprint
-  - folder: /config/blueprints
-
-homeassistant:
-  allowlist_external_dirs:
-    # Used for "Reload Automation on File Change" blueprint 
-    - /config/blueprints
-
 logger:
   default: info
 
