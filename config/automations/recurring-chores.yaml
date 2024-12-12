@@ -1,3 +1,7 @@
+# This automation triggers the reminder service.
+#
+# See modules/reminder for more details.
+
 mode: single
 alias: "Recurring Chores"
 description: >-
