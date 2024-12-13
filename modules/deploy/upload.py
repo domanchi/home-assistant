@@ -128,4 +128,6 @@ class stage:
         if not files:
             return
 
-        self.conn.do("rm", *files)
+        # NOTE: Use -f here, so that we can ignore errors that are thrown if the
+        # file is missing.
+        self.conn.do("rm", "-f", *files)
