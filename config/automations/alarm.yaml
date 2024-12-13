@@ -29,15 +29,15 @@ action:
     data:
       volume_level: 0.31
     target:
-      entity_id: media_player.bose_bedroom_2
+      entity_id: media_player.bose_bedroom
 
   - service: media_player.play_media
     target:
-      entity_id: media_player.bose_bedroom_2
+      entity_id: media_player.bose_bedroom
     data:
       # NOTE: To get this value for a NAS URI, follow these instructions:
       #   1. Play the track in HomeAssistant media player, for the selected device.
       #   2. View the websocket traffic in Developer Tools to find the exact service call to
       #      replicate.
       media_content_type: "audio/mp4"
-      media_content_id: "media-source://dlna_dms/synologyrouter/:22$@36956"
+      media_content_id: "http://192.168.1.1:50002/m/NDLNA/40374.m4a"
