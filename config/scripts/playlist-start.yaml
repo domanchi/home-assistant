@@ -1,0 +1,114 @@
+playlist_start:
+  mode: single
+  alias: Start Playlist
+  description: Loads and plays a HEOS playlist, with auto-fade capabilities.
+
+  variables:
+    # Default minimum volume to use, when volume_min is not specified.
+    default_volume_min: 0.2
+
+    # Volume to reduce per step, during fade.
+    fade_step: 0.05
+
+    # Seconds to wait between each step, during fade.
+    delay_step_seconds: 10
+
+  fields:
+    target:
+      name: Device
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain: media_player
+
+    playlist:
+      name: Playlist ID
+      description: >-
+        A HEOS-compatible playlist ID, as configured by the HEOS application.
+        For more details, see https://www.home-assistant.io/integrations/heos/#play-a-playlist.
+      
+      required: true
+      default: Soundcloud
+      selector:
+        text: {}
+    
+    duration:
+      name: Duration
+      description: Number of minutes to wait, before applying fade.
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: minutes
+    
+    volume_max:
+      name: Max Volume
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.05
+    
+    volume_min:
+      name: Min Volume
+      default: 0.2
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.05
+
+  sequence:
+    - service: media_player.volume_set
+      data:
+        volume_level: "{{ volume_max }}"
+      target:
+        entity_id: "{{ target }}"
+
+    # Play music.
+    - service: media_player.play_media
+      data:
+        enqueue: replace
+        media_content_type: playlist
+
+        # NOTE: This corresponds to the name of the HEOS managed playlist.
+        media_content_id: "{{ playlist }}"
+      target:
+        entity_id: "{{ target }}"
+
+    # Wait for designated duration, before starting fade.
+    - delay:
+        minutes: "{{ duration }}"
+    
+    # Fade logic.
+    - repeat:
+        sequence:
+          - service: media_player.volume_set
+            data:
+              volume_level: "{{ (state_attr(target, 'volume_level') | float) - fade_step }}"
+            target:
+              entity_id: "{{ target }}"
+          
+          - delay:
+              seconds: "{{ delay_step_seconds }}"
+
+        while:
+          - alias: Volume level above minimum volume.
+            condition: template
+            value_template: "{{ (state_attr(target, 'volume_level') | float) > (volume_min | default(default_volume_min)) }}"
+    
+    # Once you've faded down, stop the music.
+    - service: media_player.media_pause
+      target:
+        entity_id: "{{ target }}"
+    
+    # Reset volume after short delay, so we can make sure the track is paused first.
+    - delay:
+        seconds: 5
+    
+    - service: media_player.volume_set
+      data:
+        volume_level: "{{ volume_max }}"
+      target:
+        entity_id: "{{ target }}"

@@ -3,9 +3,14 @@
 # and 12 event listeners (each button has press, hold, release).
 
 id: "ikea-switch-manager"
-mode: parallel
 alias: IKEA Switch Manager
 description: Action to take when the IKEA Switch's buttons are pressed.
+
+# Each button is independent of each other, and state is outsourced to the underlying
+# scripts. As such, we can have parallel request handling.
+#
+# Also, for some reason, "single" does not work.
+mode: parallel
 
 # For more information, see https://www.zigbee2mqtt.io/devices/E2001_E2002.html
 trigger:
@@ -18,27 +23,12 @@ condition:
 
 action:
   - variables:
-      sleep_time_minutes: 45
+      # This configures how long the music should be playing, before it fades out.
+      sleep_time_minutes: 30
 
       # This is especially useful when performing traces, since we can see the
       # value used to perform conditional processing.
       action: "{{ trigger.payload_json.action }}"
-
-  # NOTE: Saver doesn't support default arguments right now, so we'll have to
-  # manually initialize it before this can work.
-  #
-  # The variables to initialize are:
-  #   - mutex.switch: []
-  - if:
-      - condition: template
-        value_template: "{{ action in (saver_variable('mutex.switch') | from_json) }}"
-    then:
-      - stop: Action is currently processing.
-    else:
-      - service: saver.set_variable
-        data:
-          name: mutex.switch
-          value: "{{ ((saver_variable('mutex.switch') | from_json) + [action]) | to_json}}"
 
   # Control a night light, with auto-sleep functionality.
   - if:
@@ -50,7 +40,7 @@ action:
           device: light.wiz
           brightness: 10
           duration:
-            hours: 2
+            hours: 1
 
   # If we accidentally turn on the light, it's nice to have an option to turn it
   # off again.
@@ -67,100 +57,22 @@ action:
       - condition: template
         value_template: "{{ action == 'off' }}"
     then:
-      - service: script.start_playlist
+      - service: script.playlist_start
         data:
           target: media_player.home_theater
-
-      # NOTE: Implement wait here (rather than setting the initial_delay
-      # parameter), so that we can essentially use the mutex / CV without a
-      # leaky abstraction within the fader.
-      - repeat:
-          sequence:
-            - delay:
-                minutes: 1
-          while:
-            - condition: template
-              value_template: "{{ action in (saver_variable('mutex.switch') | from_json) }}"
-            - condition: template
-              value_template: "{{ repeat.index < sleep_time_minutes }}"
-
-      - if:
-          - condition: template
-            value_template: "{{ action in (saver_variable('mutex.switch') | from_json) }}"
-        then:
-          - service: script.fade_out
-            data:
-              entity_id: media_player.home_theater
-
-      # TODO: announce audio
+          playlist: "Soundcloud"
+          duration: "{{ sleep_time_minutes }}"
+          volume_max: 0.3
+          volume_min: 0.2
 
   # Stop music
   - if:
       - condition: template
         value_template: "{{ action == 'brightness_move_down' }}"
     then:
-      - service: media_player.media_stop
-        data: {}
-        target:
-          entity_id: media_player.home_theater
-
-      # Clear the mutex on the play action
-      - service: saver.set_variable
+      - service: script.playlist_stop
         data:
-          name: mutex.switch
-          value: "{{ (saver_variable('mutex.switch') | from_json) | reject('==', 'off') | list | to_json }}"
-
-  # NOTE: Saver doesn't support default arguments right now, so we'll have to
-  # manually initialize it before this can work.
-  #
-  # The variables to initialize are:
-  #   - playlist_id: 0
-  #   - playlists:   [{ name: "", volume: 0 }, ...]
-  #
-  # TODO: setup volume
-  - if:
-      - condition: template
-        value_template: "{{ action == 'arrow_left_click' }}"
-    then:
-      - service: saver.set_variable
-        data:
-          name: playlist_id
-          value: "{{ ((saver_variable('playlist_id') | int) - 1) % (saver_variable('playlists') | from_json | length) }}"
-
-      # Allow reloading of playlist if already in playing state.
-      - if:
-          - condition: state
-            entity_id: media_player.home_theater
-            state: playing
-        then:
-          - service: script.start_playlist
-            data:
-              target: media_player.home_theater
-
-  - if:
-      - condition: template
-        value_template: "{{ action == 'arrow_right_click' }}"
-    then:
-      - service: saver.set_variable
-        data:
-          name: playlist_id
-          value: "{{ ((saver_variable('playlist_id') | int) + 1) % (saver_variable('playlists') | from_json | length) }}"
-
-      # Allow reloading of playlist if already in playing state.
-      - if:
-          - condition: state
-            entity_id: media_player.home_theater
-            state: playing
-        then:
-          - service: script.start_playlist
-            data:
-              target: media_player.home_theater
-
-  # Clear the mutex once complete.
-  - service: saver.set_variable
-    data:
-      name: mutex.switch
-      value: "{{ (saver_variable('mutex.switch') | from_json) | reject('==', action) | list | to_json }}"
+          target: media_player.home_theater
 
   # NOTE: Unfortunately, we need to catch this on button press (rather than
   # being independent to actual usage) because I can't get status requests to

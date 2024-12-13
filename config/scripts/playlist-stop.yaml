@@ -1,0 +1,24 @@
+playlist_stop:
+  mode: single
+  alias: Stop Playlist
+  description: >-
+    Stops any running playlist, and kills the fade timer.
+
+  fields:
+    target:
+      name: Device
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain: media_player
+  
+  sequence:
+    - service: media_player.media_stop
+      data: {}
+      target:
+        entity_id: "{{ target }}"
+    
+    - service: script.turn_off
+      target:
+        entity_id: script.playlist_start

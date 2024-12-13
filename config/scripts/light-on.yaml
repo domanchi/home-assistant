@@ -37,9 +37,9 @@ light_on:
         entity_id: "{{ device }}"
 
     - delay:
-        hours: "{{ duration.hours }}"
-        minutes: "{{ duration.minutes }}"
-        seconds: "{{ duration.seconds }}"
+        hours: "{{ duration.hours | default(0, true) }}"
+        minutes: "{{ duration.minutes | default(0, true) }}"
+        seconds: "{{ duration.seconds | default(0, true) }}"
 
     - service: light.turn_off
       target:
