@@ -20,6 +20,21 @@ trigger:
 
 condition: []
 
+variables:
+  # When the temperature falls below this level, turn on the heat.
+  heat_low: 69
+
+  # When the temperature is above this level, turn off the heat.
+  heat_high: 72
+
+  # When the heater is turned on, set the temperature to this value.
+  # The difference between this and [heat_high] is that we can somewhat control the speed
+  # at which the temperature is increased (assuming "Auto" mode controls fan speed).
+  heat_target: 74
+
+  # If the fan is turned on AND the temparture falls below this value, turn off the fan.
+  cool_target: 72
+
 action:
   # Heat the room if the temperature falls below a specific threshold.
   - if:
@@ -36,22 +51,34 @@ action:
             after: "19:00:00"
             before: "07:00:00"
 
-          - condition: numeric_state
-            entity_id: sensor.air_purifier_fan_temperature
-            below: 67
+          - condition: template
+            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float <= heat_low }}"
+
     then:
+      - service: fan.set_direction
+        data:
+          direction: forward
+        target:
+          entity_id: fan.air_purifier_fan
+
+      - service: dyson_local.set_angle
+        data:
+          entity_id: fan.air_purifier_fan
+          angle_low: 145
+          angle_high: 215
+
       - service: fan.turn_on
         data:
           preset_mode: "Auto"
         target:
-          device_id: f0648e102917955d0a22ac4fbecbe5a3
+          entity_id: fan.air_purifier_fan
 
       - service: climate.set_temperature
         data:
-          temperature: 70
+          temperature: "{{ heat_target }}"
           hvac_mode: heat
         target:
-          device_id: f0648e102917955d0a22ac4fbecbe5a3
+          entity_id: climate.air_purifier_fan
 
   # The inverse of the above scenario: turn off the heat once the desired
   # temperature has been reached.
@@ -69,14 +96,14 @@ action:
             entity_id: climate.air_purifier_fan
             state: "heat"
 
-          - condition: numeric_state
-            entity_id: sensor.air_purifier_fan_temperature
-            above: 69
+          - condition: template
+            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float >= heat_high }}"
+
     then:
       - service: fan.turn_off
         data: {}
         target:
-          device_id: f0648e102917955d0a22ac4fbecbe5a3
+          entity_id: fan.air_purifier_fan
 
   # If we manually turn on the fan to cool the room down, make sure to
   # turn it off when we don't need it anymore.
@@ -91,12 +118,11 @@ action:
             entity_id: climate.air_purifier_fan
             state: "cool"
 
-          - condition: numeric_state
-            entity_id: sensor.air_purifier_fan_temperature
-            below: 72
+          - condition: template
+            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float <= cool_target }}"
+
     then:
       - service: fan.turn_off
         data: {}
         target:
-          device_id: f0648e102917955d0a22ac4fbecbe5a3
-
+          entity_id: fan.air_purifier_fan
