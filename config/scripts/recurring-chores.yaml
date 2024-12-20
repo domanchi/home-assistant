@@ -273,8 +273,8 @@ recurring_chores:
           content: Replace baking soda in trash
     - if:
       - condition: template
-        value_template: '{{ as_datetime(today).month % 3 == 0 and as_datetime(today).isoweekday()
-          == 5 }}'
+        value_template: '{{ as_datetime(today).month % 3 == 0 and as_datetime(today).day
+          == 1 }}'
       then:
       - action: logbook.log
         data:

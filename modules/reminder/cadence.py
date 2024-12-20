@@ -26,7 +26,10 @@ class Cadence:
     def QUARTERLY(cls) -> "Cadence":
         # NOTE: This currently causes "thundering herd" problems, but we can make it more
         # intelligent at a future date if necessary.
-        return cls.for_period(month_divisible_by=3)
+        return cls.for_period(
+            month_divisible_by=3,
+            date=1,
+        )
 
     @classmethod
     def YEARLY(cls, month: int, date: int) -> "Cadence":
