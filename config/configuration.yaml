@@ -24,3 +24,6 @@ http:
 logger:
   default: info
 
+# This is necessary for building triggers off log output.
+system_log:
+  fire_event: true

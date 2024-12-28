@@ -1,0 +1,26 @@
+# This automation adds Slack notifications for errors raised by various automations/scripts
+# across our infrastructure.
+#
+# To test this automation, use Developer Tools to send a "System Log: Write" action, and watch
+# Slack for expected output. You can also use Slack's BlockKit builder to iterate on the message
+# before testing.
+
+# This is just a "pub-sub" automation: every invocation should result in a Slack message.
+# It does not depend on any stateful object, and therefore, can be parallel.
+mode: parallel
+alias: Error Notifier
+description: >-
+  Notify maintainers when an unexpected error is encountered.
+
+triggers:
+  - trigger: event
+    event_type: system_log_event
+    event_data:
+      level: ERROR
+
+action:
+  - service: script.add_chore
+    data:
+      title: "{{ trigger.event.data.name }} encountered an error"
+      channel: "#notifications"
+      message: "`{{ trigger.event.data.name }}` encountered an <http://control.home:8123/config/logs|error>:\n```{{ trigger.event.data.message[0] }}```"
