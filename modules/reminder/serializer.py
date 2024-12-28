@@ -81,28 +81,6 @@ def serialize_to_yaml(*tasks: Task, filename: str = "") -> bytes:
 
 
 def _serialize_task(task: Task) -> dict[str, Any]:
-    slack_notification = {
-        "action": "notify.pockets_inc",
-        "data": {
-            "target": "{{ channel }}",
-            "message": "I've added a chore to your to-do list.",
-            "data": {
-                "blocks": [
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": (
-                                f"I've added \"*{task.description}*\" to your "
-                                "<https://app.todoist.com/app/project/chores-2337975766|to-do list>."
-                            ),
-                        },
-                    },
-                ],
-            },
-        },
-    }
-
     return {
         "if": [
             {
@@ -119,17 +97,17 @@ def _serialize_task(task: Task) -> dict[str, Any]:
                     "message": f"Added task: {task.description}",
                 },
             },
-            slack_notification,
             {
-                "condition": "template",
-                "value_template": "{{ add_task }}",
-            },
-            {
-                "action": "todoist.new_task",
+                "action": "script.add_chore",
                 "data": {
+                    "title": task.description,
+                    "channel": "{{ channel }}",
+                    "message": (
+                        f"I've added \"*{task.description}*\" to your "
+                        "<https://app.todoist.com/app/project/chores-2337975766|to-do list>."
+                    ),
                     "project": "Chores",
                     "labels": "recurring",
-                    "content": task.description,
                 },
             },
         ],

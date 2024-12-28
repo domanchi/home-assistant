@@ -1,0 +1,95 @@
+# add_chore parameterizes a bundled Slack messenger + Todoist integration.
+#
+# Example Usage:
+#   - add_chore(title="message", channel="#claudia-test")
+#     Sends "message" to the #claudia-test Slack channel.
+#
+#   - add_chore(title="clean room", description="runbook link", project="Chores")
+#     Adds a Todoist item in Chores project.
+add_chore:
+  # This is just a "pub-sub" script: every invocation should result in an action.
+  # It does not depend on any stateful object, and therefore, can be parallel.
+  mode: parallel
+
+  alias: Add Chore
+  description: >-
+    Adds an item to TODO list, as well as sends a Slack notification to inform users
+    that this has been added.
+
+  fields:
+    title:
+      name: Title
+      description: Overview of the chore added.
+      required: true
+      selector:
+        text: {}
+
+    channel:
+      name: Slack Channel
+      default: "#claudia-test"
+      description: >-
+        If provided, will send a notification to the Slack channel specified.
+      selector:
+        text: {}
+    
+    message:
+      name: Slack Message
+      description: >-
+        Slack-flavored markdown-compatible text to send as a Slack message.
+        Optional, defaults to title.
+      selector:
+        text: {}
+    
+    project:
+      name: Todoist Project
+      description: >-
+        If provided, will add a task to the specified todoist project.
+      selector:
+        text: {}
+
+    labels:
+      name: Todoist Task Labels
+      description: >-
+        Comma-delimeted, categorization tags for todoist tasks. Optional.
+      selector:
+        text: {}
+
+    description:
+      name: Todoist Task Description
+      description: >-
+        Markdown-compatible text to add context to Todoist task. Optional.
+
+  sequence:
+    - parallel:
+      - if:
+        - condition: template
+          value_template: "{{ channel | default('') != '' }}"
+        then:
+        - action: notify.pockets_inc
+          data:
+            # NOTE: These defaults are to prevent unnecessary complaints about undefined
+            # variables. They are "unnecessary" because the above conditional will fail
+            # (although statically, the errors are valid).
+            target: "{{ channel | default('') }}"
+            message: "{{ title | default('') }}"
+            data:
+              blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "{{ message | default(title) }}"
+      
+      - if:
+        - condition: template
+          value_template: "{{ project | default('') != '' }}"
+        then:
+        - action: todoist.new_task
+          data:
+            # NOTE: These defaults are to prevent unnecessary complaints about undefined
+            # variables. They are "unnecessary" because the above conditional will fail
+            # (although statically, the errors are valid).
+            project: "{{ project | default('') }}"
+            content: "{{ title | default('') }}"
+
+            labels: "{{ labels | default('') }}"
+            description: "{{ description | default('') }}"

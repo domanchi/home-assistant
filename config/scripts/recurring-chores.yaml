@@ -33,24 +33,14 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Send Rosie into the bedroom'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Send Rosie into the bedroom*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Send Rosie into the bedroom
+          channel: '{{ channel }}'
+          message: I've added "*Send Rosie into the bedroom*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Send Rosie into the bedroom
     - if:
       - condition: template
         value_template: '{{ as_datetime(today).isoweekday() == 4 and as_datetime(today).isocalendar().week
@@ -61,24 +51,14 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Run dishwasher'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Run dishwasher*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Run dishwasher
+          channel: '{{ channel }}'
+          message: I've added "*Run dishwasher*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Run dishwasher
     - if:
       - condition: template
         value_template: '{{ as_datetime(today).isoweekday() == 4 and as_datetime(today).isocalendar().week
@@ -89,24 +69,14 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Clean pipes'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Clean pipes*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Clean pipes
+          channel: '{{ channel }}'
+          message: I've added "*Clean pipes*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Clean pipes
     - if:
       - condition: template
         value_template: '{{ as_datetime(today).day == 1 }}'
@@ -116,24 +86,14 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Wash bedsheets'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Wash bedsheets*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Wash bedsheets
+          channel: '{{ channel }}'
+          message: I've added "*Wash bedsheets*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Wash bedsheets
     - if:
       - condition: template
         value_template: '{{ as_datetime(today).day == 1 }}'
@@ -143,24 +103,14 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Clean the humidifier'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Clean the humidifier*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Clean the humidifier
+          channel: '{{ channel }}'
+          message: I've added "*Clean the humidifier*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Clean the humidifier
     - if:
       - condition: template
         value_template: '{{ as_datetime(today).day == 10 }}'
@@ -170,24 +120,14 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Clean the bathroom'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Clean the bathroom*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Clean the bathroom
+          channel: '{{ channel }}'
+          message: I've added "*Clean the bathroom*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Clean the bathroom
     - if:
       - condition: template
         value_template: '{{ as_datetime(today).day == 10 }}'
@@ -197,24 +137,14 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Clean the counter-tops'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Clean the counter-tops*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Clean the counter-tops
+          channel: '{{ channel }}'
+          message: I've added "*Clean the counter-tops*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Clean the counter-tops
     - if:
       - condition: template
         value_template: '{{ as_datetime(today).month % 2 == 0 and as_datetime(today).day
@@ -225,24 +155,14 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Replace baking soda in fridge'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Replace baking soda in fridge*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Replace baking soda in fridge
+          channel: '{{ channel }}'
+          message: I've added "*Replace baking soda in fridge*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Replace baking soda in fridge
     - if:
       - condition: template
         value_template: '{{ as_datetime(today).month % 2 == 0 and as_datetime(today).day
@@ -253,24 +173,14 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Replace baking soda in trash'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Replace baking soda in trash*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Replace baking soda in trash
+          channel: '{{ channel }}'
+          message: I've added "*Replace baking soda in trash*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Replace baking soda in trash
     - if:
       - condition: template
         value_template: '{{ as_datetime(today).month % 3 == 0 and as_datetime(today).day
@@ -281,24 +191,14 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Clean the washer/dryer'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Clean the washer/dryer*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Clean the washer/dryer
+          channel: '{{ channel }}'
+          message: I've added "*Clean the washer/dryer*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Clean the washer/dryer
     - if:
       - condition: template
         value_template: '{{ as_datetime(today).month % 6 == 5 and as_datetime(today).day
@@ -309,24 +209,14 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Wash Plushies'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Wash Plushies*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Wash Plushies
+          channel: '{{ channel }}'
+          message: I've added "*Wash Plushies*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Wash Plushies
     - if:
       - condition: template
         value_template: '{{ as_datetime(today).month == 12 and as_datetime(today).day
@@ -337,21 +227,11 @@ recurring_chores:
           name: Recurring Chores
           entity_id: script.recurring_chores
           message: 'Added task: Clean out fridge'
-      - action: notify.pockets_inc
+      - action: script.add_chore
         data:
-          target: '{{ channel }}'
-          message: I've added a chore to your to-do list.
-          data:
-            blocks:
-            - type: section
-              text:
-                type: mrkdwn
-                text: I've added "*Clean out fridge*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-                  list>.
-      - condition: template
-        value_template: '{{ add_task }}'
-      - action: todoist.new_task
-        data:
+          title: Clean out fridge
+          channel: '{{ channel }}'
+          message: I've added "*Clean out fridge*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
+            list>.
           project: Chores
           labels: recurring
-          content: Clean out fridge
