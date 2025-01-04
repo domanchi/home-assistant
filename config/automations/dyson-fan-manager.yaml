@@ -6,6 +6,10 @@
 # When the room gets too cold (as measured by the fan), the heat should turn on
 # to warm it up until an acceptable level is reached. Then, it should turn off
 # and let the room gradually cool down naturally.
+#
+# TODO: Consider moving more of this logic to a script layer. Specifically, by converting
+# the trigger variable to a script input, we are able to better test this logic without needing
+# to actually wait for a specific temperature to be hit.
 
 id: "dyson-fan-manager"
 mode: single
@@ -66,6 +70,13 @@ action:
           entity_id: fan.air_purifier_fan
           angle_low: 145
           angle_high: 215
+
+      # NOTE: Night mode makes the fan quieter.
+      # TODO: Consider adjusting this if we turn the fan on to clean the air.
+      - service: switch.turn_on
+        data: {}
+        target:
+          entity_id: switch.air_purifier_fan_night_mode
 
       - service: fan.turn_on
         data:
