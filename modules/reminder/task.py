@@ -18,10 +18,6 @@ tasklist = [
         cadence=Cadence.WEEKLY(5),
     ),
     Task(
-        description="Run dishwasher",
-        cadence=Cadence.FORTNIGHTLY(4),
-    ),
-    Task(
         description="Clean pipes",
         cadence=Cadence.FORTNIGHTLY(4),
     ),
@@ -36,10 +32,6 @@ tasklist = [
     ),
     Task(
         description="Clean the bathroom",
-        cadence=Cadence.MONTHLY(10),
-    ),
-    Task(
-        description="Clean the counter-tops",
         cadence=Cadence.MONTHLY(10),
     ),
 

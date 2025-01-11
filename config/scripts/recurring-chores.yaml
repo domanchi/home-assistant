@@ -50,24 +50,6 @@ recurring_chores:
         data:
           name: Recurring Chores
           entity_id: script.recurring_chores
-          message: 'Added task: Run dishwasher'
-      - action: script.add_chore
-        data:
-          title: Run dishwasher
-          channel: '{{ channel }}'
-          message: I've added "*Run dishwasher*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-            list>.
-          project: Chores
-          labels: recurring
-    - if:
-      - condition: template
-        value_template: '{{ as_datetime(today).isoweekday() == 4 and as_datetime(today).isocalendar().week
-          % 2 == 0 }}'
-      then:
-      - action: logbook.log
-        data:
-          name: Recurring Chores
-          entity_id: script.recurring_chores
           message: 'Added task: Clean pipes'
       - action: script.add_chore
         data:
@@ -125,23 +107,6 @@ recurring_chores:
           title: Clean the bathroom
           channel: '{{ channel }}'
           message: I've added "*Clean the bathroom*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
-            list>.
-          project: Chores
-          labels: recurring
-    - if:
-      - condition: template
-        value_template: '{{ as_datetime(today).day == 10 }}'
-      then:
-      - action: logbook.log
-        data:
-          name: Recurring Chores
-          entity_id: script.recurring_chores
-          message: 'Added task: Clean the counter-tops'
-      - action: script.add_chore
-        data:
-          title: Clean the counter-tops
-          channel: '{{ channel }}'
-          message: I've added "*Clean the counter-tops*" to your <https://app.todoist.com/app/project/chores-2337975766|to-do
             list>.
           project: Chores
           labels: recurring

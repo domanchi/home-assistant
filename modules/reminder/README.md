@@ -9,7 +9,7 @@ To update recurring task list, first add your changes to `task.py`. Then, run th
 ```bash
 $ python -m modules.reminder > config/scripts/recurring-chores.yaml
 $ git add config/scripts/recurring-chores.yaml
-$ bin/deploy -v
+$ bin/deploy -v -m "$commitMessage"
 ```
 
 ## Design
@@ -34,3 +34,4 @@ This is written as a script to be invoked by an automation, so that we can expli
 2.  Click on the hamburger icon, and click "Information"
 3.  Configure the inputs accordingly.
 4.  Hit "Run".
+
