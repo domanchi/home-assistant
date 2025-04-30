@@ -1,0 +1,66 @@
+purify_air:
+  mode: single
+  alias: Purify Air
+  description: >-
+    Increase the air purifier strength for a set duration.
+
+  fields:
+    device:
+      name: Device
+      required: True
+      selector:
+        entity:
+          filter:
+            - domain: "fan"
+
+    strength:
+      name: Strength
+      description: Fan speed.
+      default: 70
+      selector:
+        number:
+          min: 0
+          max: 100
+
+    duration:
+      name: Duration
+      description: >-
+        Configures how long the fan should be on, before it turns off by itself.
+
+      selector:
+        duration: {}
+
+  variables:
+    # We expect this value to be set on manual mode.
+    # If this value is not set, it will default to "auto" preset.
+    current_state: "{{ state_attr('fan.vital_200s', 'percentage') }}"
+
+  sequence:
+    - service: fan.set_percentage
+      data:
+        percentage: "{{ strength }}"
+      target:
+        entity_id: "{{ device }}"
+
+    - delay:
+        hours: "{{ duration.hours | default(0, true) }}"
+        minutes: "{{ duration.minutes | default(0, true) }}"
+        seconds: "{{ duration.seconds | default(0, true) }}"
+
+    # Restore to previous state.
+    - if:
+        - condition: template
+          value_template: "{{ current_speed_percentage == None }}"
+      then:
+        - service: fan.set_preset
+          data:
+            preset_mode: auto
+          target:
+            entity_id: fan.vital_200s
+      else:
+        - service: fan.set_percentage
+          data:
+            percentage: "{{ current_speed_percentage }}"
+          target:
+            entity_id: fan.vital_200s
+

@@ -1,0 +1,59 @@
+# Problem: The Levoit air purifier has the capabilities to clear odors out
+# of the air, but it currently requires a manual effort to increase the fan
+# strength for a short amount of time -- only to decrease it once the odor
+# has cleared.
+#
+# Despite its "auto" mode, this is only as good as the sensor. While the sensor
+# has been effective at picking up smoke (i.e. during cooking), it's less good
+# at picking up odors. Therefore, a manual effort is necessary to let it know
+# to increase the speed accordingly.
+#
+# Desired State: Send a command to clear the air, and once the air has been
+# sufficiently purified, it can reduce back to normal speed.
+id: "levoit-air-purifier-odor-removal"
+mode: single
+alias: "Levoit Air Purifier: Odor Removal"
+description: >-
+  Implements an on-demand odor remover.
+
+condition: []
+
+variables:
+  # How long should the high speed run for?
+  running_time_min: 10
+
+  # This is a value between 0-100, and denotes the accelerated fan speed
+  # that should be set temporarily to clear the air.
+  top_speed_percentage: 70
+
+  # We expect this value to be set on manual mode.
+  # If this value is not set, it will default to "auto" preset.
+  current_speed_percentage: "{{ state_attr('fan.vital_200s', 'percentage') }}"
+
+action:
+  - service: fan.set_percentage
+    data:
+      percentage: "{{ top_speed_percentage }}" 
+    target:
+      entity_id: fan.vital_200s
+
+  - delay:
+      minutes: "{{ running_time_min }}"
+
+  # Restore to previous state.
+  - if:
+      - condition: template
+        value_template: "{{ current_speed_percentage == None }}"
+    then:
+      - service: fan.set_preset
+        data:
+          preset_mode: auto
+        target:
+          entity_id: fan.vital_200s
+    else:
+      - service: fan.set_percentage
+        data:
+          percentage: "{{ current_speed_percentage }}"
+        target:
+          entity_id: fan.vital_200s
+
