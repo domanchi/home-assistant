@@ -13,14 +13,16 @@ purify_air:
           filter:
             - domain: "fan"
 
+    # NOTE: This is limited to the firmware, because it will round any more
+    # granular percentage to these overall values.
     strength:
       name: Strength
       description: Fan speed.
-      default: 70
+      default: 3
       selector:
         number:
-          min: 0
-          max: 100
+          min: 1
+          max: 4
 
     duration:
       name: Duration
@@ -38,7 +40,7 @@ purify_air:
   sequence:
     - service: fan.set_percentage
       data:
-        percentage: "{{ strength }}"
+        percentage: "{{ strength * 25 }}"
       target:
         entity_id: "{{ device }}"
 
@@ -47,20 +49,26 @@ purify_air:
         minutes: "{{ duration.minutes | default(0, true) }}"
         seconds: "{{ duration.seconds | default(0, true) }}"
 
-    # Restore to previous state.
     - if:
+        # Make sure that we didn't terminate early by manually changing the
+        # state ourselves.
         - condition: template
-          value_template: "{{ current_speed_percentage == None }}"
+          value_template: "{{ state_attr('fan.vital_200s', 'percentage') == strength * 25 }}"
       then:
-        - service: fan.set_preset
-          data:
-            preset_mode: auto
-          target:
-            entity_id: fan.vital_200s
-      else:
-        - service: fan.set_percentage
-          data:
-            percentage: "{{ current_speed_percentage }}"
-          target:
-            entity_id: fan.vital_200s
+        # Restore to previous state.
+        - if:
+            - condition: template
+              value_template: "{{ current_state == None }}"
+          then:
+            - service: fan.set_preset_mode
+              data:
+                preset_mode: auto
+              target:
+                entity_id: "{{ device }}"
+          else:
+            - service: fan.set_percentage
+              data:
+                percentage: "{{ current_state }}"
+              target:
+                entity_id: "{{ device }}"
 

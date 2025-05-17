@@ -16,44 +16,30 @@ alias: "Levoit Air Purifier: Odor Removal"
 description: >-
   Implements an on-demand odor remover.
 
+trigger:
+  - platform: conversation
+    command:
+      - freshen the air
+
 condition: []
 
 variables:
   # How long should the high speed run for?
   running_time_min: 10
 
-  # This is a value between 0-100, and denotes the accelerated fan speed
+  # This is a value between 1-4, and denotes the accelerated fan speed
   # that should be set temporarily to clear the air.
-  top_speed_percentage: 70
+  fan_speed: 3
 
   # We expect this value to be set on manual mode.
   # If this value is not set, it will default to "auto" preset.
   current_speed_percentage: "{{ state_attr('fan.vital_200s', 'percentage') }}"
 
 action:
-  - service: fan.set_percentage
+  - service: script.purify_air
     data:
-      percentage: "{{ top_speed_percentage }}" 
-    target:
-      entity_id: fan.vital_200s
-
-  - delay:
-      minutes: "{{ running_time_min }}"
-
-  # Restore to previous state.
-  - if:
-      - condition: template
-        value_template: "{{ current_speed_percentage == None }}"
-    then:
-      - service: fan.set_preset
-        data:
-          preset_mode: auto
-        target:
-          entity_id: fan.vital_200s
-    else:
-      - service: fan.set_percentage
-        data:
-          percentage: "{{ current_speed_percentage }}"
-        target:
-          entity_id: fan.vital_200s
+      device: fan.vital_200s
+      strength: "{{ fan_speed }}"
+      duration:
+        minutes: "{{ running_time_min }}"
 
