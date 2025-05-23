@@ -1,0 +1,198 @@
+handle_pollen_severity:
+  mode: single
+  alias: Handle Pollen Severity
+
+  fields:
+    device:
+      name: Device
+      required: True
+      selector:
+        entity:
+          filter:
+            - domain: "fan"
+
+    severity:
+      name: Severity
+      required: True
+      selector:
+        number:
+          min: 0
+          max: 10
+
+  sequence:
+    # Early termination.
+    - if:
+        - condition: template
+          value_template: "{{ severity | int == 0 }}"
+      then:
+        - stop:
+
+    #
+    # Every X:30
+    #
+
+    - if:
+        - condition: template
+          value_template: "{{ now().minute == 30 }}"
+      then:
+        - if:
+            - condition: template
+              value_template: "{{ severity | int == 3 }}"
+          then:
+            - service: script.purify_air
+              data:
+                device: fan.vital_200s
+                strength: 2
+                duration:
+                  minutes: 15
+            - stop:
+
+        - if:
+            - condition: template
+              value_template: "{{ severity | int == 6 }}"
+          then:
+            - service: script.purify_air
+              data:
+                device: fan.vital_200s
+                strength: 3
+                duration:
+                  minutes: 15
+            - stop:
+
+        - if:
+            - condition: template
+              value_template: "{{ severity | int == 9 }}"
+          then:
+            - service: script.purify_air
+              data:
+                device: fan.vital_200s
+                strength: 4
+                duration:
+                  minutes: 15
+            - stop:
+
+    #
+    # Every hour
+    #
+
+    - if:
+        - condition: template
+          value_template: "{{ now().minute == 0 }}"
+      then:
+        - if:
+            - condition: or
+              conditions:
+                - condition: template
+                  value_template: "{{ severity | int == 2 }}"
+                - condition: template
+                  value_template: "{{ severity | int == 3 }}"
+
+          then:
+            - service: script.purify_air
+              data:
+                device: fan.vital_200s
+                strength: 2
+                duration:
+                  minutes: 15
+            - stop:
+
+        - if:
+            - condition: or
+              conditions:
+                - condition: template
+                  value_template: "{{ severity | int == 5 }}"
+                - condition: template
+                  value_template: "{{ severity | int == 6 }}"
+
+          then:
+            - service: script.purify_air
+              data:
+                device: fan.vital_200s
+                strength: 3
+                duration:
+                  minutes: 15
+            - stop:
+
+        - if:
+            - condition: or
+              conditions:
+                - condition: template
+                  value_template: "{{ severity | int == 8 }}"
+                - condition: template
+                  value_template: "{{ severity | int == 9 }}"
+
+          then:
+            - service: script.purify_air
+              data:
+                device: fan.vital_200s
+                strength: 4
+                duration:
+                  minutes: 15
+            - stop:
+
+    #
+    # New permanent states
+    #
+
+    - if:
+        - condition: template
+          value_template: "{{ severity | int == 1 }}"
+      then:
+        - service: fan.set_preset_mode
+          data:
+            preset_mode: auto
+          target:
+            entity_id: fan.vital_200s
+
+    - if:
+        - condition: or
+          conditions:
+            - condition: template
+              value_template: "{{ severity | int == 2 }}"
+            - condition: template
+              value_template: "{{ severity | int == 3 }}"
+      then:
+        - service: fan.set_percentage
+          data:
+            percentage: 25
+          target:
+            entity_id: fan.vital_200s
+
+    - if:
+        - condition: and
+          conditions:
+            - condition: template
+              value_template: "{{ severity | int >= 4 }}"
+            - condition: template
+              value_template: "{{ severity | int <= 6 }}"
+      then:
+        - service: fan.set_percentage
+          data:
+            percentage: 50
+          target:
+            entity_id: fan.vital_200s
+
+    - if:
+        - condition: and
+          conditions:
+            - condition: template
+              value_template: "{{ severity | int >= 7 }}"
+            - condition: template
+              value_template: "{{ severity | int <= 9 }}"
+      then:
+        - service: fan.set_percentage
+          data:
+            percentage: 75
+          target:
+            entity_id: fan.vital_200s
+
+    - if:
+        - condition: template
+          value_template: "{{ severity | int == 10 }}"
+      then:
+        - service: fan.set_percentage
+          data:
+            percentage: 100
+          target:
+            entity_id: fan.vital_200s
+

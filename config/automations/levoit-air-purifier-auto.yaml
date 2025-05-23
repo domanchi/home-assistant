@@ -1,0 +1,23 @@
+# Problem: The Levoit air purifier has the capabilities to keep pollen out of
+# the air, but is unable to actually detect pollen with its sensors.
+#
+# Solution: With a manually controlled pollen severity level, manage a fan mode
+# to match the severity.
+id: "levoit-air-purifier-pollen-mode"
+mode: single
+alias: "Levoit Air Purifier: Auto Pollen Mode"
+description: >-
+  Implements a better auto fan mode for pollen.
+
+trigger:
+  - platform: time_pattern
+    minutes: "/15"
+
+condition: []
+
+action:
+  - service: script.handle_pollen_severity
+    data:
+      device: fan.vital_200s
+      severity: "{{ saver_variable('pollen_severity') }}"
+
