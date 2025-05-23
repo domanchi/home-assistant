@@ -1,5 +1,5 @@
 handle_pollen_severity:
-  mode: single
+  mode: restart
   alias: Handle Pollen Severity
 
   fields:
@@ -18,6 +18,28 @@ handle_pollen_severity:
         number:
           min: 0
           max: 10
+
+      description: >-
+        Configures the air purifier's mode based on pollen severity.
+        This is a value between 1-10, and intends to be better than "auto" mode
+        for pollen (since the sensor can't detect it).
+
+        If value == 0, the automation will be disabled.
+
+        The air purifier has four fan levels (4 == MAX), and will correspond to
+        the severity levels in the following fashion:
+
+           1. Auto mode.
+           2. Level 2 for 15 minutes once an hour.
+           3. Level 2 for 15 minutes twice an hour.
+           4. Level 2.
+           5. Level 3 for 15 minutes once an hour.
+           6. Level 3 for 15 minutes twice an hour.
+           7. Level 3.
+           8. Level 4 for 15 minutes once an hour.
+           9. Level 4 for 15 minutes twice an hour.
+          10. Level 4.
+
 
   sequence:
     # Early termination.
@@ -41,7 +63,7 @@ handle_pollen_severity:
           then:
             - service: script.purify_air
               data:
-                device: fan.vital_200s
+                device: "{{ device }}"
                 strength: 2
                 duration:
                   minutes: 15
@@ -53,7 +75,7 @@ handle_pollen_severity:
           then:
             - service: script.purify_air
               data:
-                device: fan.vital_200s
+                device: "{{ device }}"
                 strength: 3
                 duration:
                   minutes: 15
@@ -65,7 +87,7 @@ handle_pollen_severity:
           then:
             - service: script.purify_air
               data:
-                device: fan.vital_200s
+                device: "{{ device }}"
                 strength: 4
                 duration:
                   minutes: 15
@@ -90,7 +112,7 @@ handle_pollen_severity:
           then:
             - service: script.purify_air
               data:
-                device: fan.vital_200s
+                device: "{{ device }}"
                 strength: 2
                 duration:
                   minutes: 15
@@ -107,7 +129,7 @@ handle_pollen_severity:
           then:
             - service: script.purify_air
               data:
-                device: fan.vital_200s
+                device: "{{ device }}"
                 strength: 3
                 duration:
                   minutes: 15
@@ -124,7 +146,7 @@ handle_pollen_severity:
           then:
             - service: script.purify_air
               data:
-                device: fan.vital_200s
+                device: "{{ device }}"
                 strength: 4
                 duration:
                   minutes: 15
@@ -142,7 +164,7 @@ handle_pollen_severity:
           data:
             preset_mode: auto
           target:
-            entity_id: fan.vital_200s
+            entity_id: "{{ device }}"
 
     - if:
         - condition: or
@@ -156,7 +178,7 @@ handle_pollen_severity:
           data:
             percentage: 25
           target:
-            entity_id: fan.vital_200s
+            entity_id: "{{ device }}"
 
     - if:
         - condition: and
@@ -170,7 +192,7 @@ handle_pollen_severity:
           data:
             percentage: 50
           target:
-            entity_id: fan.vital_200s
+            entity_id: "{{ device }}"
 
     - if:
         - condition: and
@@ -184,7 +206,7 @@ handle_pollen_severity:
           data:
             percentage: 75
           target:
-            entity_id: fan.vital_200s
+            entity_id: "{{ device }}"
 
     - if:
         - condition: template
@@ -194,5 +216,5 @@ handle_pollen_severity:
           data:
             percentage: 100
           target:
-            entity_id: fan.vital_200s
+            entity_id: "{{ device }}"
 

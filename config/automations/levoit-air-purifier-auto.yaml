@@ -19,5 +19,5 @@ action:
   - service: script.handle_pollen_severity
     data:
       device: fan.vital_200s
-      severity: "{{ saver_variable('pollen_severity') }}"
+      severity: "{{ states('input_number.pollen_severity') | int }}"
 

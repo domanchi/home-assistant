@@ -1,0 +1,32 @@
+# Problem: We want to configure the severity level from the dashboard.
+#
+# Solution: HomeAssistant provides this capability as an `input_number` entity.
+# It tracks the state independently, and can be used instead of `saver`.
+# However, this `input_number` needs to be connected to the rest of the
+# automation.
+#
+# Therefore, we construct the following state diagram:
+#
+# [ input_number.pollen_severity ] <-- changed from dashboard
+#                |
+#          (on change)
+#                ↓                    ___________________
+# [ automation.pollen-severity ] --> | perform action    |
+#              (on cron trigger) --> | based on severity |
+#                                     
+
+id: "pollen-severity"
+mode: single
+alias: Trigger Pollen Severity Change
+
+trigger:
+  - trigger: state
+    entity_id:
+      - input_number.pollen_severity
+
+action:
+  - service: script.handle_pollen_severity
+    data:
+      device: fan.vital_200s
+      severity: "{{ states('input_number.pollen_severity') | int }}"
+

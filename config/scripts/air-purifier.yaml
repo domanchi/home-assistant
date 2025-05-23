@@ -1,5 +1,5 @@
 purify_air:
-  mode: single
+  mode: restart
   alias: Purify Air
   description: >-
     Increase the air purifier strength for a set duration.
