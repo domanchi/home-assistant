@@ -1,0 +1,32 @@
+disarm_timer:
+  mode: restart
+  alias: Disarm Timer
+  description: >-
+    Disables automation for a given device, and cancels any running timers.
+    Timer-dependent actions will not be triggered.
+
+  fields:
+    toggle:
+      name: Toggle
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain: "input_boolean"
+
+    timer:
+      name: Timer
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain: "timer"
+
+  sequence:
+    - service: timer.cancel
+      target:
+        entity_id: "{{ timer }}"
+
+    - service: input_boolean.toggle
+      target:
+        entity_id: "{{ toggle }}"

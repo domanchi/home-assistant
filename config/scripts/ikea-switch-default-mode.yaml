@@ -1,0 +1,104 @@
+handle_ikea_switch_default:
+  # Each button is independent of each other.
+  mode: parallel
+  alias: "Ikea Switch: Default Mode"
+  description: >-
+    Handles events for the IKEA switch, with default settings.
+
+  fields:
+    event:
+      name: Event
+      required: True
+      description: The label of the button that was pressed.
+
+  sequence:
+    # If the top button is tapped.
+    - if:
+        - condition: template
+          value_template: "{{ event == 'on' }}"
+      then:
+        # If automation is enabled, then disable automation
+        # and turn off the light.
+        - if:
+            - condition: state
+              entity_id: "input_boolean.wiz_armed"
+              state: "on"
+          then:
+            - service: timer.finish
+              target:
+                entity_id: "timer.wiz_power_off"
+
+            - stop:
+
+        # Toggle the light switch.
+        - if:
+            - condition: state
+              entity_id: "light.wiz"
+              state: "off"
+          then:
+            - service: light.turn_on
+              target:
+                entity_id: "light.wiz"
+          else:
+            - service: light.turn_off
+              target:
+                entity_id: "light.wiz"
+
+    # If the top button is held.
+    - if:
+        - condition: template
+          value_template: "{{ event == 'brightness_move_up' }}"
+      then:
+        - if:
+            # Only "arm" it when the light is on.
+            - condition: state
+              entity_id: "light.wiz"
+              state: "on"
+
+            # This conditional allows the "else" statement to be triggered
+            # much more frequently than without this conditional.
+            - condition: state
+              entity_id: "input_boolean.wiz_armed"
+              state: "off"
+
+          then:
+            - service: input_boolean.turn_on
+              target:
+                entity_id: "input_boolean.wiz_armed"
+          else:
+            # This conditional is necessary for UX.
+            #
+            # Since this is a physical button, the actual state
+            # of the light is unknown. If a button is accidentally
+            # pressed, we would want a method to turn off the light,
+            # independent of current light state.
+            #
+            # This conditional enables a "double hold" action to
+            # unconditionally disable automation and turn off
+            # the light.
+            - service: timer.finish
+              target:
+                entity_id: "timer.wiz_power_off"
+
+    # If the bottom button is tapped.
+    - if:
+        - condition: template
+          value_template: "{{ event == 'off' }}"
+      then:
+        - service: script.playlist_start
+          data:
+            target: media_player.home_theater
+            playlist: "Soundcloud"
+            duration: 30  # minutes
+            volume_max: 0.34
+            volume_min: 0.2
+
+    # If the bottom button is held.
+    - if:
+        - condition: template
+          value_template: "{{ event == 'brightness_move_down' }}"
+      then:
+        - service: script.playlist_stop
+          data:
+            target: media_player.home_theater
+

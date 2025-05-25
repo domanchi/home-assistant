@@ -22,74 +22,34 @@ condition:
     value_template: "{{ trigger.payload_json.action != '' }}"
 
 action:
-  - variables:
-      # This configures how long the music should be playing, before it fades out.
-      sleep_time_minutes: 30
-
-      # This is especially useful when performing traces, since we can see the
-      # value used to perform conditional processing.
-      action: "{{ trigger.payload_json.action }}"
-
-  # Control a night light, with auto-sleep functionality.
   - if:
       - condition: template
-        value_template: "{{ action == 'on' }}"
+        value_template: "{{ states('input_select.mode_ikea_button').startswith('Demo') }}"
     then:
-      - service: script.light_on
-        data:
-          device: light.wiz
-          brightness: 10
-          duration:
-            hours: 1
+      # TODO: handle different button modes
+      - stop:
 
-  # If we accidentally turn on the light, it's nice to have an option to turn it
-  # off again.
-  - if:
-      - condition: template
-        value_template: "{{ action == 'brightness_move_up' }}"
-    then:
-      - service: script.light_off
-        data:
-          device: light.wiz
-
-  # Play music.
-  - if:
-      - condition: template
-        value_template: "{{ action == 'off' }}"
-    then:
-      - service: script.playlist_start
-        data:
-          target: media_player.home_theater
-          playlist: "Soundcloud"
-          duration: "{{ sleep_time_minutes }}"
-          volume_max: 0.3
-          volume_min: 0.2
-
-  # Stop music
-  - if:
-      - condition: template
-        value_template: "{{ action == 'brightness_move_down' }}"
-    then:
-      - service: script.playlist_stop
-        data:
-          target: media_player.home_theater
+  - service: script.handle_ikea_switch_default
+    data:
+      event: "{{ trigger.payload_json.action }}"
 
   # NOTE: Unfortunately, we need to catch this on button press (rather than
   # being independent to actual usage) because I can't get status requests to
   # work over MQTT.
-  - if:
-      - condition: template
-        value_template: "{{ trigger.payload_json.battery <= 10 }}"
-    then:
-      - service: notify.pockets_inc
-        data:
-          target: "#chores"
-          message: Change the IKEA Switch's battery.
-          data:
-            blocks:
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: The *IKEA Switch* needs its battery changed.
-                    It is currently on *{{ trigger.payload_json.battery}}%*.
-
+  #
+  # TODO(2024-01-04): The battery died today, with no indication that this triggered.
+  # In closer investigation, it looks like the below heuristic does not work (logs showed that
+  # this was a static value, despite the battery dying).
+  #
+  # I hypothesize that a firmware upgrade may be needed, but I don't know how to revert back
+  # in the case that goes wrong. As such, we'll just need to rely on runbook to change battery
+  # until we can actually fix this.
+  #
+  # - if:
+  #     - condition: template
+  #       value_template: "{{ trigger.payload_json.battery <= 10 }}"
+  #   then:
+  #     - service: script.add_chore
+  #       data:
+  #         title: Change the IKEA Switch battery.
+  #         channel: "#chores"

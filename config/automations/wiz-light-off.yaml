@@ -1,0 +1,29 @@
+id: "wiz-light-off"
+mode: single
+alias: "Wiz: Auto Power Off"
+description: >-
+  Integrates with `timer.wiz_power_off`, and provides the glue between
+  trigger and action.
+
+trigger:
+  # NOTE: This is necessary to distinguish from timer.cancelled.
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.wiz_power_off
+
+condition:
+  # Light is on.
+  - condition: state
+    entity_id: light.wiz
+    state: "on"
+
+action:
+  - service: light.turn_off
+    target:
+      entity_id: "light.wiz"
+
+  # Disable automation, now that the light has turned off.
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.wiz_armed

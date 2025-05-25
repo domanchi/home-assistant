@@ -1,0 +1,24 @@
+id: "wiz-set-timer"
+mode: restart
+alias: "Wiz: Set Timer"
+description: >-
+  On `input_boolean.wiz_armed` set, this will kick off the timer.
+  Upon timer completion, we expect the light to turn off.
+
+trigger:
+  # Automation has just been enabled.
+  - platform: state
+    entity_id: input_boolean.wiz_armed
+    to: "on"
+
+condition:
+  # Light is on (so should auto turn off)
+  - condition: state
+    entity_id: light.wiz
+    state: "on"
+
+action:
+  - service: timer.start
+    target:
+      entity_id: "timer.wiz_power_off"
+
