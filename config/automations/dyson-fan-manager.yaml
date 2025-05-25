@@ -22,22 +22,12 @@ trigger:
     entity_id:
       - sensor.air_purifier_fan_temperature
 
-condition: []
-
-variables:
-  # When the temperature falls below this level, turn on the heat.
-  heat_low: 69
-
-  # When the temperature is above this level, turn off the heat.
-  heat_high: 72
-
-  # When the heater is turned on, set the temperature to this value.
-  # The difference between this and [heat_high] is that we can somewhat control the speed
-  # at which the temperature is increased (assuming "Auto" mode controls fan speed).
-  heat_target: 74
-
-  # If the fan is turned on AND the temparture falls below this value, turn off the fan.
-  cool_target: 72
+condition:
+  # Only trigger the automation if automation is enabled.
+  # We do not want humans fighting machines in real life.
+  - condition: state
+    entity_id: input_boolean.dyson_armed
+    state: "on"
 
 action:
   # Heat the room if the temperature falls below a specific threshold.
@@ -51,12 +41,12 @@ action:
             state: "off"
 
           # NOTE: Currently, we only care about heating the room in the evening.
-          - condition: time
-            after: "19:00:00"
-            before: "07:00:00"
+          - condition: state
+            entity_id: binary_sensor.bedtime
+            state: "on"
 
           - condition: template
-            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float <= heat_low }}"
+            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float <= states('input_number.min_temperature') }}"
 
     then:
       - service: fan.set_direction
@@ -84,13 +74,6 @@ action:
         target:
           entity_id: fan.air_purifier_fan
 
-      - service: climate.set_temperature
-        data:
-          temperature: "{{ heat_target }}"
-          hvac_mode: heat
-        target:
-          entity_id: climate.air_purifier_fan
-
   # The inverse of the above scenario: turn off the heat once the desired
   # temperature has been reached.
   - if:
@@ -108,7 +91,7 @@ action:
             state: "heat"
 
           - condition: template
-            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float >= heat_high }}"
+            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float >= state_attr('climate.air_purifier_fan', 'temperature') }}"
 
     then:
       - service: fan.turn_off
@@ -130,7 +113,7 @@ action:
             state: "cool"
 
           - condition: template
-            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float <= cool_target }}"
+            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float <= states('input_number.min_temperature') }}"
 
     then:
       - service: fan.turn_off
