@@ -30,6 +30,12 @@ condition:
     state: "on"
 
 action:
+  - variables:
+      # NOTE: Choose the lowest temperature, because these themometers aren't
+      # super reliable, and we want to be conservative (rather be too hot, than
+      # too cold).
+      temperature: "{{ min(states('sensor.air_purifier_fan_temperature') | int, state_attr('climate.air_purifier_fan', 'current_temperature')) }}"
+
   # Heat the room if the temperature falls below a specific threshold.
   - if:
       - condition: and
@@ -46,7 +52,7 @@ action:
             state: "on"
 
           - condition: template
-            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float <= states('input_number.min_temperature') }}"
+            value_template: "{{ temperature <= states('input_number.min_temperature') | float }}"
 
     then:
       - service: fan.set_direction
@@ -60,6 +66,12 @@ action:
           entity_id: fan.air_purifier_fan
           angle_low: 145
           angle_high: 215
+
+      - service: climate.set_hvac_mode
+        target:
+          entity_id: climate.air_purifier_fan
+        data:
+          hvac_mode: heat 
 
       # NOTE: Night mode makes the fan quieter.
       # TODO: Consider adjusting this if we turn the fan on to clean the air.
@@ -91,7 +103,7 @@ action:
             state: "heat"
 
           - condition: template
-            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float >= state_attr('climate.air_purifier_fan', 'temperature') }}"
+            value_template: "{{ temperature >= state_attr('climate.air_purifier_fan', 'temperature') | float }}"
 
     then:
       - service: fan.turn_off
@@ -113,7 +125,7 @@ action:
             state: "cool"
 
           - condition: template
-            value_template: "{{ states('sensor.air_purifier_fan_temperature') | float <= states('input_number.min_temperature') }}"
+            value_template: "{{ temperature <= states('input_number.min_temperature') | float }}"
 
     then:
       - service: fan.turn_off
