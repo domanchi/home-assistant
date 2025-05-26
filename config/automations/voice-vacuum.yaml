@@ -18,109 +18,17 @@ trigger:
     command:
       - clean the {location}
 
+      # Help the bad STT model
+      - queen the {location}
+
 condition: []
 
 action:
-  - choose:
-      # House
-      #
-      # This is useful for sending one command, then leaving the house.
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.slots.location == 'house' }}"
+  - service: script.handle_roborock_profile
+    data:
+      device: "vacuum.roborock_s3"
+      profile: "{{ trigger.slots.location }}"
 
-        sequence:
-          - service: vacuum.send_command
-            data:
-              command: app_segment_clean
-              params:
-                - repeat: 1
-
-                  # NOTE: Each segment is visited in order (rather than computing the total area
-                  #       and cleaning it in totality). As such, we order it in such a way that
-                  #       it minimizes transition movements between areas.
-                  segments:
-                    - 20  # living room
-                    - 24  # dining area
-                    - 18  # kitchen
-
-            target:
-              entity_id: vacuum.roborock_s7
-
-      # Living Room
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.slots.location == 'living room' }}"
-
-        sequence:
-          - service: vacuum.send_command
-            data:
-              command: app_segment_clean
-              params:
-                - repeat: 1
-
-                  # NOTE: Each segment is visited in order (rather than computing the total area
-                  #       and cleaning it in totality). As such, we order it in such a way that
-                  #       it minimizes transition movements between areas.
-                  segments:
-                    - 20  # living room
-                    - 24  # dining area
-
-            target:
-              entity_id: vacuum.roborock_s7
-
-      # Bedroom
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.slots.location == 'bedroom' }}"
-
-        sequence:
-          - service: vacuum.send_command
-            data:
-              command: app_segment_clean
-              params:
-                - repeat: 1
-                  segments:
-                    - 16  # bedroom
-
-            target:
-              entity_id: vacuum.roborock_s7
-
-      # Dining
-      #
-      # This is useful for a particularly messy meal.
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.slots.location == 'dining area' }}"
-
-        sequence:
-          - service: vacuum.send_command
-            data:
-              command: app_segment_clean
-              params:
-                - repeat: 1
-                  segments:
-                    - 24  # dining area
-
-            target:
-              entity_id: vacuum.roborock_s7
-
-      # Kitchen
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.slots.location == 'kitchen' }}"
-
-        sequence:
-          - service: vacuum.send_command
-            data:
-              command: app_segment_clean
-              params:
-                - repeat: 1
-                  segments:
-                    - 18  # kitchen
-
-            target:
-              entity_id: vacuum.roborock_s7
-
-    default:
-      - set_conversation_response: "Clean the {{ trigger.slots.location }} yourself."
+    # TODO: How does the script return an error?
+    #default:
+      #- set_conversation_response: "Clean the {{ trigger.slots.location }} yourself."

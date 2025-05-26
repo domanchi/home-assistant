@@ -1,0 +1,124 @@
+handle_roborock_profile:
+  mode: single
+  alias: "Roborock: Run Profile"
+
+  fields:
+    device:
+      name: Device
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain: "vacuum"
+
+    profile:
+      name: Profile Name
+      required: true
+      selector:
+        text:
+          multiline: false
+
+  sequence:
+    # NOTE: Guard against cases of overloading vacuum.
+    - if:
+        - condition: template
+          value_template: "{{ states(device) == 'cleaning' }}"
+      then:
+        - stop:
+
+    - choose:
+        # House
+        #
+        # This is useful for sending one command, then leaving the house.
+        - conditions:
+            - condition: template
+              value_template: "{{ profile == 'house' }}"
+
+          sequence:
+            - service: vacuum.send_command
+              target:
+                entity_id: "{{ device }}"
+              data:
+                command: app_segment_clean
+                params:
+                  - repeat: 1
+
+                    # NOTE: Each segment is visited in order (rather than computing the total area
+                    #       and cleaning it in totality). As such, we order it in such a way that
+                    #       it minimizes transition movements between areas.
+                    segments:
+                      - 20  # living room
+                      - 24  # dining area
+                      - 18  # kitchen
+
+        # Living Room
+        - conditions:
+            - condition: template
+              value_template: "{{ profile == 'living room' }}"
+
+          sequence:
+            - service: vacuum.send_command
+              target:
+                entity_id: "{{ device }}"
+              data:
+                command: app_segment_clean
+                params:
+                  - repeat: 1
+
+                    # NOTE: Each segment is visited in order (rather than computing the total area
+                    #       and cleaning it in totality). As such, we order it in such a way that
+                    #       it minimizes transition movements between areas.
+                    segments:
+                      - 20  # living room
+                      - 24  # dining area
+
+        # Bedroom
+        - conditions:
+            - condition: template
+              value_template: "{{ profile == 'bedroom' }}"
+
+          sequence:
+            - service: vacuum.send_command
+              target:
+                entity_id: "{{ device }}"
+              data:
+                command: app_segment_clean
+                params:
+                  - repeat: 1
+                    segments:
+                      - 16  # bedroom
+
+        # Dining
+        #
+        # This is useful for a particularly messy meal.
+        - conditions:
+            - condition: template
+              value_template: "{{ profile == 'dining area' }}"
+
+          sequence:
+            - service: vacuum.send_command
+              target:
+                entity_id: "{{ device }}"
+              data:
+                command: app_segment_clean
+                params:
+                  - repeat: 1
+                    segments:
+                      - 24  # dining area
+
+        # Kitchen
+        - conditions:
+            - condition: template
+              value_template: "{{ profile == 'kitchen' }}"
+
+          sequence:
+            - service: vacuum.send_command
+              target:
+                entity_id: "{{ device }}"
+              data:
+                command: app_segment_clean
+                params:
+                  - repeat: 1
+                    segments:
+                      - 18  # kitchen
+
