@@ -228,7 +228,7 @@ handle_pollen_severity:
       then:
         - service: timer.start
           target:
-            entity_id: "timer.levoit_timer"
+            entity_id: "timer.levoit"
           data:
             # NOTE: duration = 0 would use the default duration.
             duration: 1
