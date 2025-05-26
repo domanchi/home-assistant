@@ -1,0 +1,33 @@
+id: "levoit-reset"
+mode: restart
+alias: "Levoit: Reset Speed"
+description: >-
+  Integrates with the `timer.levoit`, and provides the glue between
+  trigger and action.
+
+trigger:
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.levoit
+
+condition: []
+
+action:
+  - if:
+      - condition: state
+        entity_id: "input_number.levoit_desired_speed"
+        state: "0"
+    then:
+      - service: fan.set_preset_mode
+        data:
+          preset_mode: auto
+        target:
+          entity_id: "fan.vital_200s"
+    else:
+      - service: fan.set_percentage
+        data:
+          percentage: "{{ states('input_number.levoit_desired_speed') | float * 25 }}"
+        target:
+          entity_id: "fan.vital_200s"
+

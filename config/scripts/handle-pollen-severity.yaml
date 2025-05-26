@@ -160,11 +160,11 @@ handle_pollen_severity:
         - condition: template
           value_template: "{{ severity | int == 1 }}"
       then:
-        - service: fan.set_preset_mode
-          data:
-            preset_mode: auto
+        - service: input_number.set_value
           target:
-            entity_id: "{{ device }}"
+            entity_id: "input_number.levoit_desired_speed"
+          data:
+            value: 0
 
     - if:
         - condition: or
@@ -174,11 +174,11 @@ handle_pollen_severity:
             - condition: template
               value_template: "{{ severity | int == 3 }}"
       then:
-        - service: fan.set_percentage
-          data:
-            percentage: 25
+        - service: input_number.set_value
           target:
-            entity_id: "{{ device }}"
+            entity_id: "input_number.levoit_desired_speed"
+          data:
+            value: 1
 
     - if:
         - condition: and
@@ -188,11 +188,11 @@ handle_pollen_severity:
             - condition: template
               value_template: "{{ severity | int <= 6 }}"
       then:
-        - service: fan.set_percentage
-          data:
-            percentage: 50
+        - service: input_number.set_value
           target:
-            entity_id: "{{ device }}"
+            entity_id: "input_number.levoit_desired_speed"
+          data:
+            value: 2
 
     - if:
         - condition: and
@@ -202,19 +202,34 @@ handle_pollen_severity:
             - condition: template
               value_template: "{{ severity | int <= 9 }}"
       then:
-        - service: fan.set_percentage
-          data:
-            percentage: 75
+        - service: input_number.set_value
           target:
-            entity_id: "{{ device }}"
+            entity_id: "input_number.levoit_desired_speed"
+          data:
+            value: 3
 
     - if:
         - condition: template
           value_template: "{{ severity | int == 10 }}"
       then:
-        - service: fan.set_percentage
-          data:
-            percentage: 100
+        - service: input_number.set_value
           target:
-            entity_id: "{{ device }}"
+            entity_id: "input_number.levoit_desired_speed"
+          data:
+            value: 4
+
+    # NOTE: If there's an active timer, just wait for it to end before
+    # setting this new strength. Otherwise, trigger the timer explicitly
+    # to enact this new desired speed.
+    - if:
+        - condition: state
+          entity_id: "timer.levoit"
+          state: "idle"
+      then:
+        - service: timer.start
+          target:
+            entity_id: "timer.levoit_timer"
+          data:
+            # NOTE: duration = 0 would use the default duration.
+            duration: 1
 

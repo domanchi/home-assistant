@@ -1,0 +1,62 @@
+purify_air:
+  mode: restart
+  alias: Purify Air
+  description: >-
+    Increase the air purifier strength for a set duration.
+
+  fields:
+    device:
+      name: Device
+      required: True
+      selector:
+        entity:
+          filter:
+            - domain: "fan"
+
+    # NOTE: This is limited to the firmware, because it will round any more
+    # granular percentage to these overall values.
+    strength:
+      name: Strength
+      description: Fan speed.
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 4
+
+    duration:
+      name: Duration
+      description: >-
+        Configures how long the fan should be on, before it turns off by itself.
+
+      selector:
+        duration: {}
+
+  variables:
+    # We expect this value to be set on manual mode.
+    # If this value is not set, it will default to "auto" preset.
+    current_state: "{{ state_attr(device, 'percentage') }}"
+
+  sequence:
+    # First, set the current speed as the expected speed to return
+    # to when the timer runs out.
+    - service: input_number.set_value
+      target:
+        entity_id: "input_number.levoit_desired_speed"
+      data:
+        value: "{{ state_attr(device, 'percentage') / 25 | int }}"
+
+    # Temporarily increase the fan percentage, and wait for timer to reset
+    # to original speed.
+    - service: fan.set_percentage
+      data:
+        percentage: "{{ strength * 25 }}"
+      target:
+        entity_id: "{{ device }}"
+
+    - service: timer.start
+      target:
+        entity_id: "timer.levoit"
+      data:
+        duration: "{{ duration }}"
+
