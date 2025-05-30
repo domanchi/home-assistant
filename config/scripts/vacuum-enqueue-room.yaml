@@ -1,0 +1,57 @@
+vacuum_enqueue_room:
+  # You can enqueue multiple rooms.
+  mode: queued
+  alias: "Vacuum: Enqueue Room"
+  description: >-
+    Adds a room to the list of rooms to clean.
+
+  fields:
+    room:
+      name: Room
+      required: True
+      description: The room to schedule a cleaning for.
+      selector:
+        text:
+
+  sequence:
+    # Don't enqueue it if already being cleaned.
+    - if:
+        - condition: template
+          value_template: >-
+            {% set clean_list = saver_variable('vacuum.clean') %}
+            {% if not clean_list %}
+              {% set clean_list = '[]' %}
+            {% endif %}
+
+            {{ room in (clean_list | from_json) }}
+      then:
+        - stop:
+
+    # NOTE: We support toggling to support undo operations from UI.
+    #
+    # NOTE: When we add, we only append only because we want to avoid the
+    # complexity of checking duplicates in this script. We can leave that complexity
+    # for pyscript during parsing.
+    - service: saver.set_variable
+      data:
+        name: vacuum.queue
+        value: >-
+          {% set current_value = saver_variable('vacuum.queue') %}
+          {% if not current_value %}
+            {% set current_value = '[]' %}
+          {% endif %}
+
+          {% set current_value = current_value | from_json %}
+
+          {% if room in current_value %}
+            {{ current_value | reject('equalto', room) | list | to_json }}
+          {% else %}
+            {{ (current_value + [room]) | to_json }}
+          {% endif %}
+
+    # NOTE: Kick off the timer to allow a grace period for enqueuing rooms before
+    # actual execution (because an execution cycle processes all rooms in order and returns
+    # to home, before starting a new cycle).
+    - action: timer.start
+      target:
+        entity_id: timer.vacuum_start

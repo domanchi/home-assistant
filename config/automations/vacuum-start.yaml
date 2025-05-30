@@ -1,0 +1,46 @@
+id: "vacuum-start"
+mode: queued
+alias: "Vacuum: Start Clean"
+description: >-
+  Integrates with `timer.vacuum_start`, and provides the glue between
+  trigger and action.
+
+trigger:
+  # NOTE: This is necessary to distinguish from timer.cancelled.
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.vacuum_start
+
+  # NOTE: For more information on valid states,
+  # see https://www.home-assistant.io/integrations/vacuum
+  - platform: state
+    entity_id: vacuum.roborock_s7
+    to: "docked"
+
+condition: []
+
+action:
+  # If there's an active clean list AND vacuum is docked,
+  # remove the UI indicator for rooms currently being cleaned.
+  - if:
+      - condition: template
+        value_template: >-
+          {% set current_value = saver_variable('vacuum.clean') %}
+          {% if not current_value %}
+            {% set current_value = '[]' %}
+          {% endif %}
+
+          {{ current_value | from_json | length > 0 }}
+      - condition: state
+        entity_id: vacuum.roborock_s7
+        state: "docked"
+    then:
+      - service: saver.set_variable
+        data:
+          name: "vacuum.clean"
+          value: ""
+
+  - service: pyscript.vacuum_start
+    data:
+      rooms: "{{ saver_variable('vacuum.queue') }}"
