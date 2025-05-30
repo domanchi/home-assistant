@@ -120,17 +120,18 @@ class TodoistCardList extends LitElement {
       ordering = ordering.filter(label => state.order.includes(label));
     }
 
+    //  NOTE: This is +1 because ordering may have `null` labels.
+    const numHiddenSections = alphabetical.length + 1 - ordering.length;
     const sections = this.applyLocalChanges(ordering);
-
     return html`
       <ha-card>
         <todoist-header>
           ${this.hass.states[this.config.entity].attributes.name}
           
           <div slot="actions">
-            ${ordering.length < alphabetical.length ? html`
+            ${!!numHiddenSections ? html`
               <ha-icon-button 
-                title="Show hidden labels (${alphabetical.length - ordering.length} hidden)"
+                title="Show hidden labels (${numHiddenSections} hidden)"
                 @click=${this.showAllHiddenSections}
               >
                 <ha-icon icon="mdi:eye"></ha-icon>
