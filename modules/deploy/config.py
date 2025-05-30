@@ -23,6 +23,10 @@ class SynchronizedConfig:
     """
 
 
+def _ignore_validation(_, *args) -> str:
+    return ""
+
+
 # NOTE: We currently rely on the config/ prefix to make our lives easier when copying
 # files over to the remote host.
 synchronized_files = [
@@ -34,6 +38,21 @@ synchronized_files = [
     SynchronizedConfig(
         path="config/scripts",
         validate=lambda ha, *files: ha.validate_scripts(*files),
+    ),
+
+    SynchronizedConfig(
+        path="config/api-actions",
+        validate=_ignore_validation,
+    ),
+    SynchronizedConfig(
+        path="config/www",
+        validate=_ignore_validation,
+    ),
+
+    # NOTE: This is configured with auto refresh upon deploy.
+    SynchronizedConfig(
+        path="config/pyscript",
+        validate=_ignore_validation,
     ),
 
     SynchronizedConfig(

@@ -1,0 +1,26 @@
+# Fetch all information about a given project from Todoist.
+#
+# Example:
+#   - action: rest_command.todoist_fetch_data
+#
+# Problem Statement: Originally, we had this synced in a `rest` integration + sensor,
+# but HomeAssistant complained about the payload being larger than 16384 bytes
+# (current estimate: 68778 bytes).
+#
+# Solution: Populate the sensor "manually" by surfacing a REST API command, and triggering
+# it every 30 seconds (like before). However, we're going to do post-processing of the data,
+# such that each sensor will have a different project (and remove the unneccessary metadata
+# associated).
+url: https://api.todoist.com/api/v1/sync
+method: POST
+headers:
+  Authorization: !secret todoist_authz_header
+  Content-Type: application/x-www-form-urlencoded
+
+# NOTE: sync_token doesn't really work for us because the sensor data is the state
+# that we track (rather than using it to perform diffs with a separately managed state).
+#
+# NOTE: For some reason, this ordering of parameters matters....
+payload: >-
+  resource_types=["projects", "items", "sections"]&
+  sync_token=*

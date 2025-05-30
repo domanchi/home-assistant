@@ -1,0 +1,16 @@
+# Add an item to todoist, using the Quick Add API.
+# For more information, see
+# https://developer.todoist.com/api/v1/#tag/Tasks/operation/quick_add_api_v1_tasks_quick_post.
+#
+# Example:
+#   - action: rest_command.todoist_quick_add
+#     data:
+#       text: "salsa @trader-joes #shopping"
+
+url: https://api.todoist.com/api/v1/tasks/quick
+method: POST
+headers:
+  Authorization: !secret todoist_authz_header
+
+content_type: "application/json"
+payload: '{"text": "{{ text }}"}'

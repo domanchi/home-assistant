@@ -1,3 +1,9 @@
+# NOTE: Any changes to this file will require a full HA restart.
+#       (not just "quick reload")
+#
+# NOTE: For more details on pre-processing directives, see
+# https://www.home-assistant.io/docs/configuration/splitting_configuration/
+
 # Loads default set of integrations. Do not remove.
 default_config:
 
@@ -8,6 +14,32 @@ frontend:
 automation: !include_dir_list automations
 script: !include_dir_list scripts
 scene: !include scenes.yaml
+
+# Source: https://www.home-assistant.io/integrations/command_line/
+#
+# This integration allows the specification of shell scripts to feed data
+# to a helper.
+command_line: []
+
+# Source: https://hacs-pyscript.readthedocs.io/en/stable/tutorial.html
+#
+# This integration allows us to define (raw) python scripts to interact with
+# HomeAssistant. More specifically, we did not use the native `python_script`
+# because it does not allow us to use json loading.
+pyscript:
+  allow_all_imports: true
+
+# Source: https://www.home-assistant.io/integrations/rest
+#
+# This integration fetches the data from the resource every $scan_interval,
+# then extracts the data into various sensors (instead of each sensor making
+# their own REST API call).
+rest: !include_dir_list api
+
+# Source: https://www.home-assistant.io/integrations/rest_command
+#
+# This integration allows templatized REST API calls to be involved as actions.
+rest_command: !include_dir_named api-actions
 
 http:
   use_x_forwarded_for: true
@@ -23,6 +55,8 @@ http:
 
 logger:
   default: info
+  logs:
+    custom_components.pyscript: info
 
 # This is necessary for building triggers off log output.
 system_log:

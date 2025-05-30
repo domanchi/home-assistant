@@ -43,8 +43,10 @@ class homeassistant:
         # https://developers.home-assistant.io/docs/api/rest/ for more details.
         logger.info("reloading HA configuration")
 
+        # TODO: consider moving to the config section.
         for service in [
             "automation",
+            "rest_command",
             "script",
         ]:
             self._session.post(f"http://{self.uri}/api/services/{service}/reload")

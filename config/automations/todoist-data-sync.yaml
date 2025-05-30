@@ -1,0 +1,12 @@
+id: "todoist-data-sync"
+mode: single
+alias: "Todoist: Fetch Data"
+
+trigger:
+  - platform: time_pattern
+    seconds: "/30"
+
+conditions: []
+
+action:
+  - service: pyscript.parse_todoist_api

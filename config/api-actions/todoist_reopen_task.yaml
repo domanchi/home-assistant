@@ -1,0 +1,13 @@
+# Reopen a previously closed task.
+# For more information, see
+# https://developer.todoist.com/api/v1/#tag/Tasks/operation/reopen_task_api_v1_tasks__task_id__reopen_post
+#
+# Example:
+#   - action: rest_command.todoist_reopen_task
+#     data:
+#       task_id: "123"
+
+url: "https://api.todoist.com/api/v1/tasks/{{ task_id }}/reopen"
+method: POST
+headers:
+  Authorization: !secret todoist_authz_header

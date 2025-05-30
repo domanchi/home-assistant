@@ -1,0 +1,33 @@
+# Add an item to todoist, using the Quick Add API.
+# For more information, see
+# https://developer.todoist.com/api/v1/#tag/Tasks/operation/update_task_api_v1_tasks__task_id__post.
+#
+# Example:
+#   - action: rest_command.todoist_update_task
+#     data:
+#       task_id: "123"
+#       content: ""
+#       description: ""
+#       tags: [""]
+
+# NOTE: If not specified, will not update.
+# NOTE: We had to use `tags` because apparently `labels` is already a keyword.
+
+url: "https://api.todoist.com/api/v1/tasks/{{ task_id }}"
+method: POST
+headers:
+  Authorization: !secret todoist_authz_header
+
+content_type: "application/json"
+payload: >-
+  {
+    {% if content is defined %}
+    "content": "{{ content }}"{% if description is defined or tags is defined %},{% endif %}
+    {% endif %}
+    {% if description is defined %}
+    "description": "{{ description }}"{% if tags is defined %},{% endif %}
+    {% endif %}
+    {% if tags is defined %}
+    "labels": {{ tags | tojson }}
+    {% endif %}
+  }
