@@ -39,6 +39,9 @@ handle_ikea_switch_default:
             - service: light.turn_on
               target:
                 entity_id: "light.wiz"
+              data:
+                rgb_color: [255, 146, 39]
+                brightness: 26
           else:
             - service: light.turn_off
               target:

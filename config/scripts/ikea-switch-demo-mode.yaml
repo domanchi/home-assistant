@@ -30,6 +30,9 @@ handle_ikea_switch_demo:
             - service: light.turn_on
               target:
                 entity_id: "light.wiz"
+              data:
+                rgb_color: [255, 146, 39]
+                brightness: 26
           else:
             - service: light.turn_off
               target:
@@ -40,6 +43,10 @@ handle_ikea_switch_demo:
         - condition: template
           value_template: "{{ event == 'arrow_right_click' }}"
       then:
+        - service: pyscript.wiz_cycle_effect
+          data:
+            entity_id: "light.wiz"
+
         - stop:
 
     # If the right button is held.
