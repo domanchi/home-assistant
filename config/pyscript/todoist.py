@@ -19,8 +19,8 @@ def parse_todoist_api() -> None:
 
     try:
         projects = todoist.parse(data)
-    except KeyError as e:
-        log.error(f"invalid payload: {str(e)}")
+    except (KeyError, TypeError) as e:
+        log.error(f"invalid payload: {str(data)}; error='{str(e)}'")
         return
 
     # Update sensors for each project
