@@ -1,0 +1,71 @@
+handle_ikea_switch_demo:
+  # Each button is independent of each other.
+  mode: parallel
+  alias: "Ikea Switch: Demo Mode"
+  description: >-
+    Handles events for the IKEA switch, with kid-friendly settings.
+
+  fields:
+    event:
+      name: Event
+      required: True
+      description: The label of the button that was pressed.
+
+  sequence:
+    # If the top button is tapped or held (kids don't know the difference)
+    - if:
+        - condition: or
+          conditions:
+            - condition: template
+              value_template: "{{ event == 'on' }}"
+            - condition: template
+              value_template: "{{ event == 'brightness_move_up' }}"
+      then:
+        # Toggle the light switch.
+        - if:
+            - condition: state
+              entity_id: "light.wiz"
+              state: "off"
+          then:
+            - service: light.turn_on
+              target:
+                entity_id: "light.wiz"
+          else:
+            - service: light.turn_off
+              target:
+                entity_id: "light.wiz"
+
+    # If the right button is pressed.
+    - if:
+        - condition: template
+          value_template: "{{ event == 'arrow_right_click' }}"
+      then:
+        - stop:
+
+    # If the right button is held.
+    - if:
+        - condition: template
+          value_template: "{{ event == 'arrow_right_hold' }}"
+      then:
+        # Child-proof unlock.
+        - service: input_select.select_option
+          target:
+            entity_id: "input_select.mode_ikea_button"
+          data:
+            option: "Default"
+
+        - stop:
+
+    # If the bottom button is tapped.
+    - if:
+        - condition: template
+          value_template: "{{ event == 'off' }}"
+      then:
+        - stop:
+
+    # If the bottom button is held.
+    - if:
+        - condition: template
+          value_template: "{{ event == 'brightness_move_down' }}"
+      then:
+        - stop:

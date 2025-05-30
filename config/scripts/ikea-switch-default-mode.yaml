@@ -80,6 +80,20 @@ handle_ikea_switch_default:
               target:
                 entity_id: "timer.wiz_power_off"
 
+    # If the right button is held.
+    - if:
+        - condition: template
+          value_template: "{{ event == 'arrow_right_hold' }}"
+      then:
+        # Child lock.
+        - service: input_select.select_option
+          target:
+            entity_id: "input_select.mode_ikea_button"
+          data:
+            option: "Demo (kid-friendly)"
+
+        - stop:
+
     # If the bottom button is tapped.
     - if:
         - condition: template

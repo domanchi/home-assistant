@@ -26,7 +26,10 @@ action:
       - condition: template
         value_template: "{{ states('input_select.mode_ikea_button').startswith('Demo') }}"
     then:
-      # TODO: handle different button modes
+      - service: script.handle_ikea_switch_demo
+        data:
+          event: "{{ trigger.payload_json.action }}"
+
       - stop:
 
   - service: script.handle_ikea_switch_default
