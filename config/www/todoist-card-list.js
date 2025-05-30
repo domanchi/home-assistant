@@ -23,7 +23,7 @@ function loadCSS(url) {
   link.type = "text/css";
   link.rel = "stylesheet";
   link.href = url;
-  
+
   //  NOTE: Need to inject this class value to the html tag for the CSS rule to kick in.
   link.onload = () => {
     document.documentElement.classList.add("sl-theme-dark");
@@ -66,7 +66,7 @@ class TodoistCardList extends LitElement {
     return {
       //  Access to the parent HomeAssistant module.
       hass: Object,
-      
+
       //  Configuration for this widget specifically.
       config: Object,
     }
@@ -104,7 +104,7 @@ class TodoistCardList extends LitElement {
 
     const alphabetical = Object.keys(labelsMapping).sort();
     let ordering = alphabetical;
-    
+
     const state = this.getState();
     const sortMode = state.sortMode || "default";
     if (sortMode === "default" && state.order && state.order.length > 0) {
