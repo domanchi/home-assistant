@@ -1,0 +1,5 @@
+name: Length of Cycle (days)
+initial: 28
+min: 20
+max: 40
+step: 1

@@ -1,0 +1,93 @@
+update_period_events:
+  mode: restart
+  alias: "Calendar: Update Egg Status"
+  description: >-
+    Assuming regularity, this script adds menstrual cycle events to the
+    chosen calendar.
+  
+  fields:
+    calendar:
+      name: Calendar
+      required: true
+      description: The calendar to update
+      selector:
+        entity:
+          filter:
+            - domain: "calendar"
+    
+    start_date:
+      name: Start Date
+      required: true
+      description: The date you started counting
+      selector:
+        date:
+  
+    cycle_length:
+      name: Cycle Length (days)
+      description: Average number of days between cycles
+      default: 28     # only UI suggestion
+      required: true
+      selector:
+        number:
+          min: 20
+          max: 40
+
+  sequence:
+    # First, remove all upcoming events. The dates have changed.
+    - service: calendar.get_events
+      data:
+        start_date_time: "{{ start_date }}"   # assumes midnight if no time specified
+        duration:
+          days: 45
+      target:
+        entity_id: "{{ calendar }}"
+      response_variable: calendar_events
+    
+    - repeat:
+        for_each: "{{ calendar_events.events | default([]) }}"
+        sequence:
+          - service: calendar.delete_event
+            data:
+              entity_id: "{{ calendar }}"
+              event_id: "{{ repeat.item.uid }}"
+    
+    # Now, create the important events.
+    - service: calendar.create_event
+      data:
+        summary: "🩸"
+        start_date: "{{ start_date }}"
+        end_date: "{{ (start_date | as_datetime | as_local + timedelta(days=5)).isoformat()[:10] }}"
+      target:
+        entity_id: "{{ calendar }}"
+
+    - service: calendar.create_event
+      data:
+        summary: "🎲"
+        start_date: "{{ (start_date | as_datetime | as_local + timedelta(days=6)).isoformat()[:10] }}"
+        end_date: "{{ (start_date | as_datetime | as_local + timedelta(days=8)).isoformat()[:10] }}"
+      target:
+        entity_id: "{{ calendar }}"
+
+    - service: calendar.create_event
+      data:
+        summary: "🍆"
+        start_date: "{{ (start_date | as_datetime | as_local + timedelta(days=cycle_length-14)).isoformat()[:10] }}"
+        end_date: "{{ (start_date | as_datetime | as_local + timedelta(days=cycle_length-13)).isoformat()[:10] }}"
+      target:
+        entity_id: "{{ calendar }}"
+    
+    - service: calendar.create_event
+      data:
+        summary: "🎲"
+        start_date: "{{ (start_date | as_datetime | as_local + timedelta(days=cycle_length-3)).isoformat()[:10] }}"
+        end_date: "{{ (start_date | as_datetime | as_local + timedelta(days=cycle_length-1)).isoformat()[:10] }}"
+      target:
+        entity_id: "{{ calendar }}"
+
+    - service: calendar.create_event
+      data:
+        summary: "🩸"
+        start_date: "{{ (start_date | as_datetime | as_local + timedelta(days=cycle_length)).isoformat()[:10] }}"
+        end_date: "{{ (start_date | as_datetime | as_local + timedelta(days=cycle_length+5)).isoformat()[:10] }}"
+      target:
+        entity_id: "{{ calendar }}"

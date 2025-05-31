@@ -1,0 +1,19 @@
+id: "period-tracker"
+mode: single
+alias: Period Tracker
+description: >-
+  Updates the calendar with the next cycle's important events.
+
+trigger:
+  - platform: state
+    entity_id: input_datetime.last_cycle_start
+  - platform: state
+    entity_id: input_number.cycle_length
+
+condition: []
+
+action:
+  - service: script.update_cycle_events
+    data:
+      calendar: "calendar.egg"
+      start_date: "{{ states('input_datetime.last_cycle_start') }}"

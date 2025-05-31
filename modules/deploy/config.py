@@ -49,6 +49,16 @@ synchronized_files = [
         validate=_ignore_validation,
     ),
 
+    # Helpers
+    SynchronizedConfig(
+        path="config/helpers/input_number",
+        validate=_ignore_validation,
+    ),
+    SynchronizedConfig(
+        path="config/helpers/input_datetime",
+        validate=_ignore_validation,
+    ),
+
     # NOTE: This is configured with auto refresh upon deploy.
     SynchronizedConfig(
         path="config/pyscript",

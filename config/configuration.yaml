@@ -15,6 +15,10 @@ automation: !include_dir_list automations
 script: !include_dir_list scripts
 scene: !include scenes.yaml
 
+# Helpers
+input_number: !include_dir_named helpers/input_number
+input_datetime: !include_dir_named helpers/input_datetime
+
 # Source: https://www.home-assistant.io/integrations/command_line/
 #
 # This integration allows the specification of shell scripts to feed data
