@@ -1,0 +1,37 @@
+
+
+id: "bose-tv-reset"
+alias: "Bose TV: Reset Automation"
+description: >-
+  Follow-up to `automation.bose_tv_enqueue_reset`.
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: "media_player.lg_webos_smart_tv"
+    to: "on"
+
+condition:
+  - condition: state
+    entity_id: input_boolean.lg_tv_prevent_wakeup
+    state: "on"
+  
+  - condition: state
+    entity_id: input_boolean.lg_tv_one_more_sleep
+    state: "on"
+
+action:
+  # First, turn off the TV for the last time.
+  - service: media_player.turn_off
+    target:
+      entity_id: media_player.lg_webos_smart_tv
+
+  # Then, turn off all state machines.
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.lg_tv_one_more_sleep
+  
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.lg_tv_prevent_wakeup

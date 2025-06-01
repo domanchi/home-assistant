@@ -58,6 +58,10 @@ synchronized_files = [
         path="config/helpers/input_datetime",
         validate=_ignore_validation,
     ),
+    SynchronizedConfig(
+        path="config/helpers/input_boolean",
+        validate=_ignore_validation,
+    ),
 
     # NOTE: This is configured with auto refresh upon deploy.
     SynchronizedConfig(

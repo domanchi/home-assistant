@@ -16,6 +16,7 @@ script: !include_dir_list scripts
 scene: !include scenes.yaml
 
 # Helpers
+input_boolean: !include_dir_named helpers/input_boolean
 input_number: !include_dir_named helpers/input_number
 input_datetime: !include_dir_named helpers/input_datetime
 

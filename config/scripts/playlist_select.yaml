@@ -1,0 +1,92 @@
+playlist_select:
+  mode: restart
+  alias: "Music Assistant: Play Preset"
+  description: >-
+    Plays a preset music mood for a given theme.
+  
+  fields:
+    mood:
+      name: Mood
+      required: true
+      description: The type of music to play.
+      selector:
+        text:
+    
+    player:
+      name: Media Player
+      required: true
+      description: The music player to emit sound from.
+      selector:
+        entity:
+          filter:
+            - domain: "media_player"
+
+    volume:
+      name: Volume
+      required: true
+      description: If provided, will set volume to this amount.
+      default: 17
+      selector:
+        number:
+          min: 0
+          max: 100
+
+  variables:
+    mood_playlists:
+      # Slow, upbeat music to ease you into the day.
+      morning:
+        - library://album/5     # FKJ: Vincent
+        - library://artist/52   # Toshiki Soejima
+        - library://track/404   # Chill Vibes: Morning Mix
+      
+      lunch:
+        - library://track/249   # Monsieur Perine: NPR Tiny Desk
+
+      dinner:
+        - library://track/234   # Billie Eilish: NPR Tiny Desk
+        - library://track/189   # Braxton Cook: NPR Tiny Desk
+        - library://track/272   # Cafe Del Mar: Volume 2
+
+      # Music to make you want to move! (and do chores)
+      dance:
+        - library://album/8
+
+      # Slow, wind-down music to have deep conversations with.
+      late-night:
+        - library://album/6     # Justice Der: Covers
+        - library://track/235   # Moonchild: NPR Tiny Desk
+        - library://track/232   # William Prince: NPR Tiny Desk
+        - library://track/220   # R&B Groove
+        - library://playlist/6  # Timbre Night
+    
+    selected_playlist_uris: "{{ mood_playlists[mood] }}"
+    selected_media_id: "{{ selected_playlist_uris | random }}"
+
+    # NOTE: Battle-tested value as insurance, just in case the player
+    # is left at a really loud volume.
+    volume: "{{ volume | default(17) }}"
+
+  sequence:
+    - service: media_player.volume_set
+      data:
+        volume_level: "{{ (volume | float) / 100 }}"
+      target:
+        entity_id: "{{ player }}"  
+
+    # Turn this on first, because there may be a lag between TV on and music start.
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.lg_tv_prevent_wakeup
+
+    - service: music_assistant.play_media
+      data:
+        media_id: "{{ selected_media_id }}"
+        enqueue: "replace"
+      target:
+        entity_id: "{{ player }}"
+
+    - service: media_player.shuffle_set
+      data:
+        shuffle: true
+      target:
+        entity_id: "{{ player }}"

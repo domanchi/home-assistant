@@ -1,0 +1,24 @@
+# Problem: The TV is connected to the Base Soundbar by HDMI CEC. This means,
+# when the speaker is turned on, the TV is also turned on. And that means the
+# TV stays on when we want to send music through the soundbar only.
+
+id: "bose-tv-isolator"
+alias: "Bose TV: Keep TV Off"
+description: Keep the TV turned off while playing music through Bose Soundbar.
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: "media_player.lg_webos_smart_tv"
+    to: "on"
+
+condition:
+  - condition: state
+    entity_id: input_boolean.lg_tv_prevent_wakeup
+    state: "on"
+
+action:
+  - service: media_player.turn_off
+    target:
+      entity_id: media_player.lg_webos_smart_tv
