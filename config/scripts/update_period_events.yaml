@@ -32,6 +32,9 @@ update_period_events:
           min: 20
           max: 40
 
+  variables:
+    cycle_length: "{{ cycle_length | default(28) }}"
+
   sequence:
     # First, remove all upcoming events. The dates have changed.
     - service: calendar.get_events

@@ -13,7 +13,7 @@ trigger:
 condition: []
 
 action:
-  - service: script.update_cycle_events
+  - service: script.update_period_events
     data:
-      calendar: "calendar.egg"
+      calendar: "calendar.eggs"
       start_date: "{{ states('input_datetime.last_cycle_start') }}"
