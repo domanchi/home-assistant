@@ -51,12 +51,8 @@ http:
   trusted_proxies:
     # Allow Nginx Proxy Manager to redirect requests to homeassistant.
     #
-    # NOTE: Currently uncertain how these IPs change. Subnet masks are
-    # permitted, but I'm uncertain the IP range that may be dynamically
-    # allocated.
-    #
-    # Consider improving this when we have more details.
-    - 172.30.33.3
+    # This is configured to live on the DNS box.
+    - 192.168.1.141
 
 logger:
   default: info
