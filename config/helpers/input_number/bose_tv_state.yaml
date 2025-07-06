@@ -1,0 +1,29 @@
+# Problem: Balancing the state machine to combat HDMI CEC is difficult.
+# This started off as a number of booleans, but as the state machine grew
+# more complex, an enumerated number variable seemed to better fit this use case.
+#
+# Enumerated State:
+#   0. Off
+#   1. Not yet UPNP (starting up)
+#   2. Mode = UPNP
+#
+# Step 1 is required because the speaker enters these states (in order) when it tries to enter
+# UPNP mode:
+#
+#    off -> on (mode = PRODUCT:TV) -> on (mode = UPNP)
+#
+# As such, there is an overloaded intent behind `PRODUCT:TV` mode:
+#   1. TV is starting up -- we would like the TV screen to be off
+#   2. Music is playing -- if user switches to `PRODUCT:TV` mode, we should reset the state machine
+#
+# Step 1 attempts to distinguish between these two cases because if `PRODUCT:TV` mode is entered
+# at step 2, it will assume the second case is true. Without this step, when the speaker turns on,
+# the second stage will trigger the state machine to be reset, creating a very strange loop:
+#
+#   - State = 0; TV turns on -> mode = PRODUCT -> State = 2
+#   - State = 2; mode = PRODUCT -> State = 0
+name: "Bose TV: State Machine"
+initial: 0
+min: 0
+max: 2
+step: 1

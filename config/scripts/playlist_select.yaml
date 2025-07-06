@@ -23,7 +23,6 @@ playlist_select:
 
     volume:
       name: Volume
-      required: true
       description: If provided, will set volume to this amount.
       default: 17
       selector:
@@ -49,7 +48,7 @@ playlist_select:
 
       # Music to make you want to move! (and do chores)
       dance:
-        - library://album/8
+        - library://album/8     # Spotify: Wake Up Happy
 
       # Slow, wind-down music to have deep conversations with.
       late-night:
@@ -67,16 +66,40 @@ playlist_select:
     volume: "{{ volume | default(17) }}"
 
   sequence:
-    - service: media_player.volume_set
-      data:
-        volume_level: "{{ (volume | float) / 100 }}"
-      target:
-        entity_id: "{{ player }}"  
+    - if:
+        - condition: template
+          value_template: "{{ is_state(player, 'off') }}"
+      then:
+        # NOTE: Trial and error suggested this was _necessary_ to actually get
+        # the song to start playing. Otherwise, MusicAssistant will _think_ it is
+        # playing (but it actually isn't).
+        - service: media_player.turn_on
+          target:
+            entity_id: "{{ player }}"
 
-    # Turn this on first, because there may be a lag between TV on and music start.
-    - service: input_boolean.turn_on
-      target:
-        entity_id: input_boolean.lg_tv_prevent_wakeup
+        # Turn this on first, because there may be a lag between TV on and music start.
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.bose_tv_state
+          data:
+            value: "1"
+
+        # Wait for speaker to come on first, otherwise, the music assistant will _think_
+        # it's playing, but it isn't synced with reality.
+        - wait_for_trigger:
+            - platform: template
+              value_template: "{{ is_state(player, 'playing') }}"
+          
+          # Insurance.
+          continue_on_timeout: false
+          timeout:
+            seconds: 10
+
+        - service: media_player.volume_set
+          data:
+            volume_level: "{{ (volume | float) / 100 }}"
+          target:
+            entity_id: "{{ player }}"
 
     - service: music_assistant.play_media
       data:
@@ -90,3 +113,33 @@ playlist_select:
         shuffle: true
       target:
         entity_id: "{{ player }}"
+
+    # Once the speaker is playing, increment this value to signify that
+    # further speaker state changes is eligible to reset the state counter.
+    #
+    # Without this step, the mere trigger of the speaker turning on will cause
+    # the speaker's state to be "PRODUCT:TV", which will reset the state before
+    # it actually has a chance to do anything.
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.bose_tv_state
+      data:
+        value: "2"
+
+    # Handle edge case where the screen may be already on; we want to turn it
+    # off because we just triggered a new playlist to play.    
+    - if:
+        - condition: state
+          entity_id: "media_player.lg_webos_smart_tv"
+          state: "on"
+      then:
+        - service: webostv.command
+          data:
+            entity_id: media_player.lg_webos_smart_tv
+            command: "com.webos.service.tvpower/power/turnOffScreen"
+          
+          # NOTE: This is necessary because it seems that the TV complains about execution
+          # of this command when the screen is already turned off. This failure results in
+          # an ugly 500 error being reflected as a toast message on button press, but since
+          # the screen is already off, let's just ignore the error and move on.
+          continue_on_error: true

@@ -1,37 +1,92 @@
-
-
 id: "bose-tv-reset"
-alias: "Bose TV: Reset Automation"
+alias: "Bose TV: Reset"
 description: >-
-  Follow-up to `automation.bose_tv_enqueue_reset`.
+  Counter-part to `automation.bose_tv_isolator`; attempts to turn off
+  automation based on sane heuristics.
 
 mode: restart
 
 trigger:
+  # When it is set back to "TV" mode...
   - platform: state
-    entity_id: "media_player.lg_webos_smart_tv"
-    to: "on"
+    entity_id: "media_player.bose_tv"
+    attribute: soundtouchplus_source
+    to: "PRODUCT:TV"
+
+  # Through trial and error, it looks like the TV auto turns off before the speaker does.
+  # We capitalize on this by using this as a signal to reset the speaker state, instead of waiting
+  # for the speaker's auto-sleep functionality.
+  # - platform: state
+  #   entity_id: "media_player.lg_webos_smart_tv"
+  #   to: "off"
+  
+  # NOTE: Originally, we tried to use the TV's auto-sleep signal to trigger this automation.
+  # However, this resulted in an early termination of the streaming music, because it seems that the
+  # TV will turn off by itself, even if the speaker is still playing. When this happens, we want the
+  # speaker to continue playing, so we cannot rely on the TV's status to trigger the lifecycle of
+  # the speaker.
+  - platform: state
+    entity_id: "media_player.bose_tv"
+    attribute: soundtouchplus_source
+    to: "STANDBY"
+  
+  # NOTE: One of the original iterations of this automation failed due to an elusive error: due to
+  # the network segmentation of the NAS and the speaker (two different subnets), DLNA would fail
+  # sporadically. When this happens, the "source" attribute will drop to `null` (as if disconnected)
+  # from the entire network.
+  #
+  # This edge case panics and is a hassle to fix. The state machine gets busted, the HomeAssistant
+  # loses connectivity to the speaker, and manual intervention needs to be exercised to get it out
+  # of this bad state.
+  #
+  # Until we fix this issue (e.g. get a separate NAS), at least restart the state machine so that
+  # it's less effort to remediate.
+  - platform: state
+    entity_id: "media_player.bose_tv"
+    attribute: soundtouchplus_source
+    to: null
 
 condition:
   - condition: state
-    entity_id: input_boolean.lg_tv_prevent_wakeup
-    state: "on"
-  
-  - condition: state
-    entity_id: input_boolean.lg_tv_one_more_sleep
-    state: "on"
+    entity_id: input_number.bose_tv_state
+    state: "2.0"
 
 action:
-  # First, turn off the TV for the last time.
-  - service: media_player.turn_off
-    target:
-      entity_id: media_player.lg_webos_smart_tv
+  # Save the current setting first, so that the later conditional can compare to the original
+  # setting, as compared to the current state (after it is set).
+  - variables:
+      is_tv_source: "{{ is_state_attr('media_player.bose_tv', 'soundtouchplus_source', 'PRODUCT:TV') }}"
 
-  # Then, turn off all state machines.
-  - service: input_boolean.turn_off
+  # Set this value first, so that the source selection to PRODUCT:TV won't reset this automation.
+  - service: input_number.set_value
     target:
-      entity_id: input_boolean.lg_tv_one_more_sleep
-  
-  - service: input_boolean.turn_off
+      entity_id: input_number.bose_tv_state
+    data:
+      value: "0"
+
+  # Make sure that it defaults to HDMI CEC mode.
+  - service: media_player.select_source
     target:
-      entity_id: input_boolean.lg_tv_prevent_wakeup
+      entity_id: media_player.bose_tv
+    data:
+      source: "PRODUCT:TV"
+
+  - if:
+      - condition: template
+        value_template: "{{ is_tv_source }}"
+    then:
+      # Assume PRODUCT:TV indicates a desire to use the TV immediately.
+      - service: webostv.command
+        data:
+          entity_id: media_player.lg_webos_smart_tv
+          command: "com.webos.service.tvpower/power/turnOnScreen"
+
+    else:
+      # NOTE: We don't send a shutdown signal to the TV, because through trial and error, it would
+      # seem that there's a fight with the TV turning on and off multiple times. So instead, we send
+      # a shutdown signal to the speaker, and rely on CEC to turn off the TV.
+      #
+      # We expect the speaker to be on because of the aforementioned source selection.
+      - service: media_player.turn_off
+        target:
+          entity_id: "media_player.bose_tv"
