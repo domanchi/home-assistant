@@ -26,7 +26,6 @@ update_period_events:
       name: Cycle Length (days)
       description: Average number of days between cycles
       default: 28     # only UI suggestion
-      required: true
       selector:
         number:
           min: 20
@@ -46,13 +45,15 @@ update_period_events:
         entity_id: "{{ calendar }}"
       response_variable: calendar_events
     
-    - repeat:
-        for_each: "{{ calendar_events.events | default([]) }}"
-        sequence:
-          - service: calendar.delete_event
-            data:
-              entity_id: "{{ calendar }}"
-              event_id: "{{ repeat.item.uid }}"
+    # NOTE: `calendar.delete_event` is not currently supported by HomeAssistant.
+    # We'd have to delete the events manually =(
+    # - repeat:
+    #     for_each: "{{ calendar_events[calendar].events | default([]) }}"
+    #     sequence:
+    #       - service: calendar.delete_event
+    #         data:
+    #           entity_id: "{{ calendar }}"
+    #           event_id: "{{ repeat.item.uid }}"
     
     # Now, create the important events.
     - service: calendar.create_event
