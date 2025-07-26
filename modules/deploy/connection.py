@@ -15,6 +15,7 @@ class Connection:
         """
         # NOTE: We don't capture logging because we don't want to accidentally capture API keys.
         command = ["ssh", self._host, shlex.join(args)]
+        logger.debug(shlex.join(command))
         result = subprocess.run(
             command,
             check=True,

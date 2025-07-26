@@ -38,6 +38,14 @@ def parse_args() -> argparse.Namespace:
             "This is useful for performing dynamic tests of configuration, before merging to master."
         ),
     )
+    parser.add_argument(
+        "--restore",
+        action="store_true",
+        help=(
+            "If specified, will restore remote system to stable code by removing "
+            "any interim changes."
+        ),
+    )
 
     return parser.parse_args()
 
@@ -48,7 +56,9 @@ if __name__ == "__main__":
         logger.configure_verbosity(args.v)
 
     if not args.message:
-        if not args.dry_run and not args.no_commit:
+        if not args.dry_run \
+                and not args.no_commit \
+                and not args.restore:
             raise argparse.ArgumentError(None, message="commit message must be specified")
 
     mode = PersistanceMode.ENABLED
@@ -56,5 +66,7 @@ if __name__ == "__main__":
         mode = PersistanceMode.DISABLED
     elif args.no_commit:
         mode = PersistanceMode.ONLY_HOST
+    elif args.restore:
+        mode = PersistanceMode.REVERT
 
     run(commit_msg=args.message, mode=mode)

@@ -14,17 +14,24 @@ class Git:
             If not provided, will perform git operations on current directory.
         """
         self._root = root
+        self._staged: list["File"] = []
 
     @property
     def root(self) -> str:
         """Returns the root of the git directory."""
-        return self.do("rev-parse", "--show-toplevel").strip()
+        if not self._root:
+            self._root = self.do("rev-parse", "--show-toplevel").strip()
+
+        return self._root
 
     @property
     def staged_files(self) -> list["File"]:
         """
         :raises: CalledProcessError on git operation failure
         """
+        if self._staged:
+            return self._staged
+
         result = self.do("diff", "--staged", "--name-status")
         files: list["File"] = []
         for line in result.splitlines():
@@ -50,6 +57,7 @@ class Git:
                     ),
                 )
 
+        self._staged = files
         return files
 
     def commit(self, msg: str) -> None:
@@ -60,6 +68,7 @@ class Git:
         """
         logger.info("committing staged files")
         self.do("commit", "--message", msg)
+        self._staged = []
 
     def merge(self) -> None:
         """Pushes to master branch."""
@@ -76,6 +85,7 @@ class Git:
         if self._root:
             args = ["-C", self._root, *args]
 
+        self._staged = []   # can't assume anything about "do" operations
         logger.debug(" ".join(["/usr/bin/git", *args]))
         return subprocess.run(
             ["/usr/bin/git", *args],

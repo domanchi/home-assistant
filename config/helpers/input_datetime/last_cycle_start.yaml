@@ -1,3 +1,5 @@
+# This is used in the `period_tracker` automation.
+
 name: Date of Last Cycle
 has_date: true
 has_time: false

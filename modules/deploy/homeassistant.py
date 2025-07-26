@@ -34,22 +34,22 @@ class homeassistant:
     """
 
     def __init__(self, base: str) -> None:
-        self.uri = f"{base}:8123"
+        self.uri = base
         self._session = requests.Session()
         self._session.headers["Authorization"] = f'Bearer {self.apikey}'
 
-    def reload(self, type: str = "") -> None:
+    def reload(self, *services: str) -> None:
         # NOTE: If you need to reload other things, see
         # https://developers.home-assistant.io/docs/api/rest/ for more details.
-        logger.info("reloading HA configuration")
+        if services:
+            logger.info("reloading HA configuration")
 
-        # TODO: consider moving to the config section.
-        for service in [
-            "automation",
-            "rest_command",
-            "script",
-        ]:
+        for service in services:
+            if not service:
+                continue
+
             self._session.post(f"http://{self.uri}/api/services/{service}/reload")
+            logger.debug(f"reloading service: {service}")
 
     def validate_global_configuration(self) -> str:
         """

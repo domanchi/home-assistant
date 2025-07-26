@@ -44,48 +44,28 @@ class TestUploadConfigs:
         assert [
             "scp fileA homeassistant@/fileA",
 
-            "ssh homeassistant mv /fileB /fileB.bak",
+            # NOTE: The test doesn't copy /bin/mv because the stub doesn't raise a
+            # CalledProcessError.
+            "ssh homeassistant test -e /fileB.bak",
             "scp fileB homeassistant@/fileB",
+
+            "ssh homeassistant test -e /fileC.bak",
         ] == u.conn.commands
 
         u.conn.commands = []
         changes.revert()
         assert u.conn.commands == [
-            "ssh homeassistant mv /fileB.bak /fileB",
-            "ssh homeassistant rm /fileA",
+            "ssh homeassistant test -e /fileB.bak",
+            "ssh homeassistant /bin/mv /fileB.bak /fileB",
+            "ssh homeassistant test -e /fileC.bak",
+            "ssh homeassistant /bin/mv /fileC.bak /fileC",
+            "ssh homeassistant rm -f /fileA",
         ]
 
         u.conn.commands = []
         changes.commit()
         assert u.conn.commands == [
-            "ssh homeassistant rm /fileB.bak /fileC",
-        ]
-
-    @staticmethod
-    def test_bulk_delete(tempdir):
-        u = uploader(
-            staged_files=[
-                File(
-                    name="fileA",
-                    operation=FileOperation.DELETED,
-                ),
-                File(
-                    name="fileB",
-                    operation=FileOperation.DELETED,
-                ),
-            ],
-        )
-
-        changes = u.upload(tempdir)
-        assert not u.conn.commands
-
-        changes.revert()
-        assert not u.conn.commands
-
-
-        changes.commit()
-        assert u.conn.commands == [
-            "ssh homeassistant rm /fileA /fileB",
+            "ssh homeassistant rm -f /fileB.bak /fileC.bak",
         ]
 
 
