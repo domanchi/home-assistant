@@ -104,8 +104,8 @@ handle_ikea_switch_default:
       then:
         - service: script.playlist_start
           data:
-            target: media_player.home_theater
-            playlist: "Soundcloud"
+            target: media_player.home_theater_2
+            playlist: "soundcloud://playlist/1385745601"
             duration: 30  # minutes
             volume_max: 0.34
             volume_min: 0.2

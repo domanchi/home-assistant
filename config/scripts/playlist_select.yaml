@@ -15,7 +15,9 @@ playlist_select:
     player:
       name: Media Player
       required: true
-      description: The music player to emit sound from.
+      description: >-
+        The music player to emit sound from.
+        This should be the MusicAssistant copy of the device.
       selector:
         entity:
           filter:
